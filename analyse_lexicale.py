@@ -5,8 +5,8 @@ from sly import Lexer
 class FloLexer(Lexer):
     # Noms des lexèmes (sauf les litéraux). En majuscule. Ordre non important
     tokens = {
-        TYPE, IDENTIFIANT, ENTIER, ECRIRE, LIRE, ET, OU, NON, SI, SINONSI,
-        SINON, TANTQUE, RETOURNER, EGAL, DIFFERENT, INFERIEUR_OU_EGAL,
+        TYPE, IDENTIFIANT, ENTIER, BOOLEEN, ECRIRE, LIRE, ET, OU, NON, SI,
+        SINONSI, SINON, TANTQUE, RETOURNER, EGAL, DIFFERENT, INFERIEUR_OU_EGAL,
         SUPERIEUR_OU_EGAL, INFERIEUR, SUPERIEUR
     }
 
@@ -17,6 +17,11 @@ class FloLexer(Lexer):
 
     # chaines contenant les caractère à ignorer. Ici espace et tabulation
     ignore = ' \t'
+
+    @_(r'Vrai|Faux')
+    def BOOLEEN(self, t):
+        t.value = t.value == "Vrai"
+        return t
 
     # cas général
     IDENTIFIANT = r'[a-zA-Z][a-zA-Z0-9_]*'  # en général, variable ou nom de fonction

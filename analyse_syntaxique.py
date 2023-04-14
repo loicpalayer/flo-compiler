@@ -9,8 +9,8 @@ class FloParser(Parser):
     tokens = FloLexer.tokens
 
     precedence = (
-       ('left', '+', '-'),
-       ('left', '*', '/', '%'),
+        ('left', '+', '-'),
+        ('left', '*', '/', '%'),
     )
 
     # Règles gramaticales et actions associées
@@ -69,6 +69,22 @@ class FloParser(Parser):
     @_('ENTIER')
     def expr(self, p):
         return arbre_abstrait.Entier(p.ENTIER)  #p.ENTIER = p[0]
+
+    @_('BOOLEEN')
+    def expr(self, p):
+        return arbre_abstrait.Booleen(p[0])
+
+    @_('expr ET expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('et', p[0], p[2])
+
+    @_('expr OU expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('ou', p[0], p[2])
+
+    @_('NON expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('non', p[1], None)
 
 
 if __name__ == '__main__':
