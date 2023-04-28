@@ -5,8 +5,8 @@ from sly import Lexer
 class FloLexer(Lexer):
     # Noms des lexèmes (sauf les litéraux). En majuscule. Ordre non important
     tokens = {
-        TYPE, IDENTIFIANT, ENTIER, BOOLEEN, ECRIRE, LIRE, ET, OU, NON, SI,
-        SINONSI, SINON, TANTQUE, RETOURNER, EGAL, DIFFERENT, INFERIEUR_OU_EGAL,
+        TYPE, IDENTIFIANT, ENTIER, BOOLEEN, ET, OU, NON, SI, SINONSI, SINON,
+        TANTQUE, RETOURNER, EGAL, DIFFERENT, INFERIEUR_OU_EGAL,
         SUPERIEUR_OU_EGAL, INFERIEUR, SUPERIEUR
     }
 
@@ -29,8 +29,6 @@ class FloLexer(Lexer):
     # cas spéciaux:
     IDENTIFIANT['entier'] = TYPE
     IDENTIFIANT['booleen'] = TYPE
-    IDENTIFIANT['ecrire'] = ECRIRE
-    IDENTIFIANT['lire'] = LIRE
     IDENTIFIANT['et'] = ET
     IDENTIFIANT['ou'] = OU
     IDENTIFIANT['non'] = NON

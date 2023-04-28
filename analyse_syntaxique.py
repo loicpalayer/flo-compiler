@@ -30,14 +30,6 @@ class FloParser(Parser):
         p[1].instructions.append(p[0])
         return p[1]
 
-    @_('ecrire')
-    def instruction(self, p):
-        return p[0]
-
-    @_('ECRIRE "(" expr ")" ";"')
-    def ecrire(self, p):
-        return arbre_abstrait.Ecrire(p.expr)  #p.expr = p[2]
-
     @_('expr "+" expr')
     def expr(self, p):
         return arbre_abstrait.Operation('+', p[0], p[2])
@@ -68,7 +60,15 @@ class FloParser(Parser):
 
     @_('ENTIER')
     def expr(self, p):
-        return arbre_abstrait.Entier(p.ENTIER)  #p.ENTIER = p[0]
+        return arbre_abstrait.Entier(p.ENTIER)
+
+    @_('IDENTIFIANT')
+    def expr(self, p):
+        return arbre_abstrait.Identifiant(p.IDENTIFIANT)
+
+    @_('IDENTIFIANT "(" expr ")" ";"')
+    def instruction(self, p):
+        return arbre_abstrait.AppelFonction(p.IDENTIFIANT, p.expr)
 
     @_('BOOLEEN')
     def expr(self, p):

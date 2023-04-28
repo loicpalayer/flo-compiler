@@ -30,17 +30,6 @@ class ListeInstructions:
 </listeInstructions>"""
 
 
-class Ecrire:
-
-    def __init__(self, exp):
-        self.exp = exp
-
-    def __str__(self):
-        return f"""<ecrire>
-    {self.exp}
-</ecrire>"""
-
-
 class Operation:
 
     def __init__(self, op, exp1, exp2):
@@ -72,3 +61,25 @@ class Booleen:
 
     def __str__(self):
         return f"<booleen>{self.valeur}</booleen>"
+
+
+class Identifiant:
+
+    def __init__(self, valeur):
+        self.valeur = valeur
+
+    def __str__(self):
+        return f"<identifiant>{self.valeur}</identifiant"
+
+
+class AppelFonction:
+
+    def __init__(self, name, args):
+        self.name = name
+        self.args = args
+
+    def __str__(self):
+        return f"""<appelFonction>
+    {self.name}
+    {self.args}
+</appelFonction>"""
