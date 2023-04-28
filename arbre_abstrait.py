@@ -12,10 +12,10 @@ class Programme:
     def __init__(self, listeInstructions):
         self.listeInstructions = listeInstructions
 
-    def afficher(self, indent=0):
-        afficher("<programme>", indent)
-        self.listeInstructions.afficher(indent + 1)
-        afficher("</programme>", indent)
+    def __str__(self):
+        return f"""<programme>
+    {self.listeInstructions}
+</programme>"""
 
 
 class ListeInstructions:
@@ -23,11 +23,11 @@ class ListeInstructions:
     def __init__(self):
         self.instructions = []
 
-    def afficher(self, indent=0):
-        afficher("<listeInstructions>", indent)
-        for instruction in self.instructions:
-            instruction.afficher(indent + 1)
-        afficher("</listeInstructions>", indent)
+    def __str__(self):
+        instructions = '\n'.join([str(i) for i in self.instructions])
+        return f"""<listeInstructions>
+    {instructions}
+</listeInstructions>"""
 
 
 class Ecrire:
@@ -35,10 +35,10 @@ class Ecrire:
     def __init__(self, exp):
         self.exp = exp
 
-    def afficher(self, indent=0):
-        afficher("<ecrire>", indent)
-        self.exp.afficher(indent + 1)
-        afficher("</ecrire>", indent)
+    def __str__(self):
+        return f"""<ecrire>
+    {self.exp}
+</ecrire>"""
 
 
 class Operation:
@@ -48,12 +48,12 @@ class Operation:
         self.op = op
         self.exp2 = exp2
 
-    def afficher(self, indent=0):
-        afficher("<operation>", indent)
-        afficher(self.op, indent + 1)
-        self.exp1.afficher(indent + 1)
-        self.exp2.afficher(indent + 1)
-        afficher("</operation>", indent)
+    def __str__(self):
+        return f"""<operation>
+    {self.exp1}
+    {self.op}
+    {self.exp2}
+</operation>"""
 
 
 class Entier:
@@ -61,8 +61,8 @@ class Entier:
     def __init__(self, valeur):
         self.valeur = valeur
 
-    def afficher(self, indent=0):
-        afficher("[Entier:" + str(self.valeur) + "]", indent)
+    def __str__(self):
+        return f"<entier>{self.valeur}</entier>"
 
 
 class Booleen:
@@ -70,5 +70,5 @@ class Booleen:
     def __init__(self, valeur):
         self.valeur = valeur
 
-    def afficher(self, indent=0):
-        afficher("[Booleen:" + str(self.valeur) + "]", indent)
+    def __str__(self):
+        return f"<booleen>{self.valeur}</booleen>"

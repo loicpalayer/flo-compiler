@@ -97,6 +97,6 @@ if __name__ == '__main__':
             data = f.read()
             try:
                 arbre = parser.parse(lexer.tokenize(data))
-                arbre.afficher()
+                print(arbre)
             except EOFError:
                 exit()
