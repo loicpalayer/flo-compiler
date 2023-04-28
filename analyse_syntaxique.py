@@ -66,9 +66,13 @@ class FloParser(Parser):
     def expr(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
-    @_('IDENTIFIANT "(" expr ")" ";"')
+    @_('IDENTIFIANT')
+    def identifiant(self, p):
+        return arbre_abstrait.Identifiant(p.IDENTIFIANT)
+
+    @_('identifiant "(" expr ")" ";"')
     def instruction(self, p):
-        return arbre_abstrait.AppelFonction(p.IDENTIFIANT, p.expr)
+        return arbre_abstrait.AppelFonction(p.identifiant, p.expr)
 
     @_('BOOLEEN')
     def expr(self, p):
