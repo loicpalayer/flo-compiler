@@ -1,7 +1,9 @@
 import json
 from typing import List, TypeAlias
 
-JSON: TypeAlias = dict[str, "JSON"] | list["JSON"] | str | int | float | bool | None
+JSON: TypeAlias = dict[str,
+                       "JSON"] | list["JSON"] | str | int | float | bool | None
+
 
 class AST:
 
@@ -51,6 +53,16 @@ class Operation(AST):
         }
 
 
+class OperationUnaire(AST):
+
+    def __init__(self, op: str, exp: AST):
+        self.op = op
+        self.exp = exp
+
+    def to_json(self) -> JSON:
+        return {"op": self.op, "exp": self.exp.to_json()}
+
+
 class Entier(AST):
 
     def __init__(self, valeur: int):
@@ -88,6 +100,7 @@ class FunctionArgs(AST):
 
     def append(self, arg: AST):
         self.args.append(arg)
+
 
 class AppelFonction(AST):
 
