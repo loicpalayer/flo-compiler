@@ -62,6 +62,15 @@ class FloParser(Parser):
     def expr(self, p):
         return arbre_abstrait.Entier(p.ENTIER)
 
+    @_('function_arg "," expr')
+    def function_arg(self, p):
+        p.function_arg.append(p.expr)
+        return p.function_arg
+
+    @_('expr')
+    def function_arg(self, p):
+        return arbre_abstrait.FunctionArgs([p.expr])
+
     @_('IDENTIFIANT')
     def expr(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
@@ -70,9 +79,9 @@ class FloParser(Parser):
     def identifiant(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
-    @_('identifiant "(" expr ")" ";"')
+    @_('identifiant "(" function_arg ")" ";"')
     def instruction(self, p):
-        return arbre_abstrait.AppelFonction(p.identifiant, p.expr)
+        return arbre_abstrait.AppelFonction(p.identifiant, p.function_arg)
 
     @_('BOOLEEN')
     def expr(self, p):
