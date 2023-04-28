@@ -97,7 +97,31 @@ class FloParser(Parser):
 
     @_('NON expr')
     def expr(self, p):
-        return arbre_abstrait.Operation('non', p[1], None)
+        return arbre_abstrait.OperationUnaire('non', p[1])
+
+    @_('expr EGAL expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('==', p[0], p[2])
+
+    @_('expr DIFFERENT expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('!=', p[0], p[2])
+
+    @_('expr INFERIEUR expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('<', p[0], p[2])
+
+    @_('expr SUPERIEUR expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('>', p[0], p[2])
+
+    @_('expr INFERIEUR_OU_EGAL expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('<=', p[0], p[2])
+
+    @_('expr SUPERIEUR_OU_EGAL expr')
+    def expr(self, p):
+        return arbre_abstrait.Operation('>=', p[0], p[2])
 
 
 if __name__ == '__main__':
