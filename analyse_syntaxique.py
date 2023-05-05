@@ -9,8 +9,12 @@ class FloParser(Parser):
     tokens = FloLexer.tokens
 
     precedence = (
+        ('left', 'ET', 'OU'),
+        ('left', 'EGAL', 'DIFFERENT', 'INFERIEUR_OU_EGAL', 'SUPERIEUR_OU_EGAL',
+         'INFERIEUR', 'SUPERIEUR'),
         ('left', '+', '-'),
         ('left', '*', '/', '%'),
+        ('right', 'UMOINS'),
     )
 
     # Règles gramaticales et actions associées
@@ -30,36 +34,26 @@ class FloParser(Parser):
         p[1].instructions.append(p[0])
         return p[1]
 
-    @_('expr "+" expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('+', p[0], p[2])
+    @_('exprArith "+" exprArith', 'exprArith "-" exprArith',
+       'exprArith "*" exprArith', 'exprArith "/" exprArith',
+       'exprArith "%" exprArith', 'exprArith INFERIEUR exprArith',
+       'exprArith SUPERIEUR exprArith', 'exprArith EGAL exprArith',
+       'exprArith DIFFERENT exprArith',
+       'exprArith INFERIEUR_OU_EGAL exprArith',
+       'exprArith SUPERIEUR_OU_EGAL exprArith')
+    def exprArith(self, p):
+        return arbre_abstrait.Operation(p[1], p[0], p[2])
 
-    @_('expr "-" expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('-', p[0], p[2])
-
-    @_('expr "*" expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('*', p[0], p[2])
-
-    @_('expr "/" expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('/', p[0], p[2])
-
-    @_('expr "%" expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('%', p[0], p[2])
-
-    @_('"-" expr')
-    def expr(self, p):
+    @_('"-" exprArith %prec UMOINS')
+    def exprArith(self, p):
         return arbre_abstrait.OperationUnaire('-', p[1])
 
-    @_('"(" expr ")"')
-    def expr(self, p):
-        return p.expr  #ou p[1]
+    @_('"(" bool ")"')
+    def exprArith(self, p):
+        return p[1]
 
     @_('ENTIER')
-    def expr(self, p):
+    def exprArith(self, p):
         return arbre_abstrait.Entier(p.ENTIER)
 
     @_('function_arg "," expr')
@@ -72,7 +66,7 @@ class FloParser(Parser):
         return arbre_abstrait.FunctionArgs([p.expr])
 
     @_('IDENTIFIANT')
-    def expr(self, p):
+    def exprArith(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
     @_('IDENTIFIANT')
@@ -83,45 +77,33 @@ class FloParser(Parser):
     def instruction(self, p):
         return arbre_abstrait.AppelFonction(p.identifiant, p.function_arg)
 
-    @_('BOOLEEN')
+    @_('bool')
     def expr(self, p):
+        return p[0]
+
+    @_('BOOLEEN')
+    def bool(self, p):
         return arbre_abstrait.Booleen(p[0])
 
-    @_('expr ET expr')
-    def expr(self, p):
+    @_('bool ET bool')
+    def bool(self, p):
         return arbre_abstrait.Operation('et', p[0], p[2])
 
-    @_('expr OU expr')
-    def expr(self, p):
+    @_('bool OU bool')
+    def bool(self, p):
         return arbre_abstrait.Operation('ou', p[0], p[2])
 
-    @_('NON expr')
-    def expr(self, p):
+    @_('NON bool')
+    def bool(self, p):
         return arbre_abstrait.OperationUnaire('non', p[1])
 
-    @_('expr EGAL expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('==', p[0], p[2])
+    @_('bool')
+    def bool(self, p):
+        return p[0]
 
-    @_('expr DIFFERENT expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('!=', p[0], p[2])
-
-    @_('expr INFERIEUR expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('<', p[0], p[2])
-
-    @_('expr SUPERIEUR expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('>', p[0], p[2])
-
-    @_('expr INFERIEUR_OU_EGAL expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('<=', p[0], p[2])
-
-    @_('expr SUPERIEUR_OU_EGAL expr')
-    def expr(self, p):
-        return arbre_abstrait.Operation('>=', p[0], p[2])
+    @_('exprArith')
+    def bool(self, p):
+        return p[0]
 
 
 if __name__ == '__main__':
