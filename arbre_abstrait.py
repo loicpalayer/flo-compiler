@@ -68,6 +68,11 @@ class Entier(AST):
     def __init__(self, valeur: int):
         self.valeur = valeur
 
+    def __eq__(self, rhs: object) -> bool:
+        if isinstance(rhs, Entier):
+            return self.valeur == rhs.valeur
+        return self.valeur == rhs
+
     def to_json(self) -> JSON:
         return {"entier": self.valeur}
 
@@ -77,6 +82,11 @@ class Booleen(AST):
     def __init__(self, valeur):
         self.valeur = valeur
 
+    def __eq__(self, rhs: object) -> bool:
+        if isinstance(rhs, Booleen):
+            return self.valeur == rhs.valeur
+        return self.valeur == rhs
+
     def to_json(self) -> JSON:
         return {"booleen": self.valeur}
 
@@ -85,6 +95,11 @@ class Identifiant(AST):
 
     def __init__(self, valeur: str):
         self.valeur = valeur
+
+    def __eq__(self, rhs: object) -> bool:
+        if isinstance(rhs, Identifiant):
+            return self.valeur == rhs.valeur
+        return self.valeur == rhs
 
     def to_json(self) -> JSON:
         return {"identifiant": self.valeur}
@@ -97,6 +112,9 @@ class FunctionArgs(AST):
 
     def to_json(self) -> JSON:
         return list(map(lambda x: x.to_json(), self.args))
+
+    def __getitem__(self, i):
+        return self.args[i]
 
     def append(self, arg: AST):
         self.args.append(arg)

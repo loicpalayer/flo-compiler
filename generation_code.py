@@ -58,11 +58,12 @@ def nasm_nouvelle_etiquette():
     """
     Retourne le nom d'une nouvelle étiquette
     """
+    global num_etiquette_courante
     num_etiquette_courante += 1
     return "e" + str(num_etiquette_courante)
 
 
-def gen_programme(programme):
+def gen_programme(programme: arbre_abstrait.Programme):
     """
     Affiche le code nasm correspondant à tout un programme
     """
@@ -80,7 +81,7 @@ def gen_programme(programme):
     nasm_instruction("int", "0x80", "", "", "exit")
 
 
-def gen_listeInstructions(listeInstructions):
+def gen_listeInstructions(listeInstructions: arbre_abstrait.ListeInstructions):
     """
     Affiche le code nasm correspondant à une suite d'instructions
     """
@@ -88,29 +89,40 @@ def gen_listeInstructions(listeInstructions):
         gen_instruction(instruction)
 
 
-def gen_instruction(instruction):
+def gen_instruction(instruction: arbre_abstrait.AST):
     """
     Affiche le code nasm correspondant à une instruction
     """
-    if type(instruction) == arbre_abstrait.Ecrire:
-        gen_ecrire(instruction)
+    if type(instruction) == arbre_abstrait.AppelFonction:
+        gen_appel_fonction(instruction)
     else:
         print("type instruction inconnu", type(instruction))
         exit(0)
 
 
-def gen_ecrire(ecrire):
+def gen_ecrire(arg: arbre_abstrait.AST):
     """
     Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
     """
-    gen_expression(ecrire.exp)  #on calcule et empile la valeur d'expression
+    gen_expression(arg)  # on calcule et empile la valeur d'expression
     nasm_instruction("pop", "eax", "", "",
-                     "")  #on dépile la valeur d'expression sur eax
+                     "")  # on dépile la valeur d'expression sur eax
     nasm_instruction("call", "iprintLF", "", "",
-                     "")  #on envoie la valeur d'eax sur la sortie standard
+                     "")  # on envoie la valeur d'eax sur la sortie standard
 
 
-def gen_expression(expression):
+def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction):
+    """
+    Affiche le code nasm correspondant à l'appel d'une fonction
+    """
+    if fonction.name == "ecrire":
+        gen_ecrire(fonction.args[0])
+    else:
+        print("type fonction inconnu", fonction.name)
+        exit(0)
+
+
+def gen_expression(expression: arbre_abstrait.AST):
     """
     Affiche le code nasm pour calculer et empiler la valeur d'une expression
     """
@@ -125,25 +137,23 @@ def gen_expression(expression):
         exit(0)
 
 
-def gen_operation(operation):
+def gen_operation(operation: arbre_abstrait.Operation):
     """
     Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
     """
     op = operation.op
 
-    gen_expression(operation.exp1)  #on calcule et empile la valeur de exp1
-    gen_expression(operation.exp2)  #on calcule et empile la valeur de exp2
+    gen_expression(operation.lhs)  # on calcule et empile la valeur de exp1
+    gen_expression(operation.rhs)  # on calcule et empile la valeur de exp2
 
     nasm_instruction("pop", "ebx", "", "",
                      "dépile la seconde operande dans ebx")
     nasm_instruction("pop", "eax", "", "",
                      "dépile la permière operande dans eax")
 
-    code = {
-        "+": "add",
-        "*": "imul"
-    }  #Un dictionnaire qui associe à chaque opérateur sa fonction nasm
-    #Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
+    code = {"+": "add", "*": "imul"}
+    # Un dictionnaire qui associe à chaque opérateur sa fonction nasm
+    # Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
     if op in ['+']:
         nasm_instruction(
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
@@ -155,7 +165,10 @@ def gen_operation(operation):
     nasm_instruction("push", "eax", "", "", "empile le résultat")
 
 
-if __name__ == "__main__":
+def main():
+    global afficher_nasm
+    global afficher_tableSymboles
+
     afficher_nasm = True
     lexer = FloLexer()
     parser = FloParser()
@@ -175,3 +188,7 @@ if __name__ == "__main__":
             gen_programme(arbre)
         except EOFError:
             exit()
+
+
+if __name__ == "__main__":
+    main()
