@@ -9,6 +9,16 @@ afficher_table = False
 afficher_nasm = False
 
 
+def check_type(expr: arbre_abstrait.AST, expected: arbre_abstrait.Type):
+    """
+    Fonction locale, permet de vérifier que le type d'une expression est bien celui attendu.
+    """
+    if expr.type() != expected:
+        raise Exception(
+            f"Erreur de type: {expr} est de type {expr.type()} au lieu de {expected}"
+        )
+
+
 def printifm(*args, **kwargs):
     """
     Un print qui ne fonctionne que si la variable afficher_table vaut Vrai.
@@ -142,8 +152,10 @@ def gen_expression(expression: arbre_abstrait.AST):
     Affiche le code nasm pour calculer et empiler la valeur d'une expression
     """
     if type(expression) == arbre_abstrait.Operation:
-        gen_operation(
-            expression)  #on calcule et empile la valeur de l'opération
+        # on calcule et empile la valeur de l'opération
+        gen_operation(expression)
+    elif type(expression) == arbre_abstrait.OperationUnaire:
+        gen_operation_unaire(expression)
     elif type(expression) == arbre_abstrait.Entier or type(
             expression) == arbre_abstrait.Booleen:
         # on met sur la pile la valeur entière
@@ -157,6 +169,7 @@ def gen_operation(operation: arbre_abstrait.Operation):
     """
     Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
     """
+
     op = operation.op
 
     gen_expression(operation.lhs)  # on calcule et empile la valeur de exp1
@@ -167,30 +180,85 @@ def gen_operation(operation: arbre_abstrait.Operation):
     nasm_instruction("pop", "eax", "", "",
                      "dépile la permière operande dans eax")
 
-    code = {"+": "add", "*": "imul", "-": "sub", "/": "div", "%": "mod"}
-    target = {"+": "eax", "*": "eax", "-": "eax", "/": "eax", "%": "edx"}
+    code = {
+        "+": "add",
+        "*": "imul",
+        "-": "sub",
+        "/": "div",
+        "%": "mod",
+        "et": "and",
+        "ou": "or"
+    }
+    target = {
+        "+": "eax",
+        "*": "eax",
+        "-": "eax",
+        "/": "eax",
+        "%": "edx",
+        "et": "eax",
+        "ou": "eax"
+    }
     # Un dictionnaire qui associe à chaque opérateur sa fonction nasm
     # Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
     if op in ['+', '-']:
+        check_type(operation, arbre_abstrait.Type.ENTIER)
+
         nasm_instruction(
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
-    if op == '*':
+    elif op == '*':
+        check_type(operation, arbre_abstrait.Type.ENTIER)
+
         nasm_instruction(
             code[op], "ebx", "", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
-    if op == '/':
+    elif op == '/':
+        check_type(operation, arbre_abstrait.Type.ENTIER)
+
         nasm_instruction("mov", "edx", "0", "", "met edx à 0")
 
         nasm_instruction(
             code[op], "ebx", "", "", "effectue l'opération edx:eax" + op +
             "ebx et met le résultat dans eax")
-    if op == '%':
+    elif op == '%':
+        check_type(operation, arbre_abstrait.Type.ENTIER)
+
         nasm_instruction("mov", "edx", "0", "", "met edx à 0")
         nasm_instruction(
             "idiv", "ebx", "", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans edx")
+    elif op in ["ou", "et"]:
+        check_type(operation, arbre_abstrait.Type.BOOLEEN)
+
+        nasm_instruction(
+            code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
+            "ebx et met le résultat dans eax")
+
+    else:
+        print("type d'opération inconnu", op)
+        exit(0)
+
     nasm_instruction("push", target[op], "", "", "empile le résultat")
+
+
+def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire):
+    op = operation.op
+
+    gen_expression(operation.exp)  # on calcule et empile la valeur de exp
+    nasm_instruction("pop", "eax", "", "",
+                     "dépile la première operande dans eax")
+
+    if op == '-':
+        check_type(operation, arbre_abstrait.Type.ENTIER)
+        nasm_instruction("neg", "eax", "", "", "effectue l'opération -eax")
+    elif op == "non":
+        check_type(operation, arbre_abstrait.Type.BOOLEEN)
+        nasm_instruction("xor", "eax", "1", "", "effectue l'opération not eax")
+    else:
+        print("type d'opération unaire inconnu")
+        exit(0)
+
+    nasm_instruction("push", "eax", "", "", "empile le résultat")
 
 
 def main():
