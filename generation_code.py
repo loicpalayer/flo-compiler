@@ -7,34 +7,30 @@ num_etiquette_courante = -1  #Permet de donner des noms différents à toutes le
 
 afficher_table = False
 afficher_nasm = False
-"""
-Un print qui ne fonctionne que si la variable afficher_table vaut Vrai.
-(permet de choisir si on affiche le code assembleur ou la table des symboles)
-"""
 
 
 def printifm(*args, **kwargs):
+    """
+    Un print qui ne fonctionne que si la variable afficher_table vaut Vrai.
+    (permet de choisir si on affiche le code assembleur ou la table des symboles)
+    """
     if afficher_nasm:
         print(*args, **kwargs)
 
 
-"""
-Un print qui ne fonctionne que si la variable afficher_table vaut Vrai.
-(permet de choisir si on affiche le code assembleur ou la table des symboles)
-"""
-
-
 def printift(*args, **kwargs):
+    """
+    Un print qui ne fonctionne que si la variable afficher_table vaut Vrai.
+    (permet de choisir si on affiche le code assembleur ou la table des symboles)
+    """
     if afficher_table:
         print(*args, **kwargs)
 
 
-"""
-Fonction locale, permet d'afficher un commentaire dans le code nasm.
-"""
-
-
 def nasm_comment(comment):
+    """
+    Fonction locale, permet d'afficher un commentaire dans le code nasm.
+    """
     if comment != "":
         printifm(
             "\t\t ; " + comment
@@ -43,13 +39,11 @@ def nasm_comment(comment):
         printifm("")
 
 
-"""
-Affiche une instruction nasm sur une ligne
-Par convention, les derniers opérandes sont nuls si l'opération a moins de 3 arguments.
-"""
-
-
 def nasm_instruction(opcode, op1="", op2="", op3="", comment=""):
+    """
+    Affiche une instruction nasm sur une ligne
+    Par convention, les derniers opérandes sont nuls si l'opération a moins de 3 arguments.
+    """
     if op2 == "":
         printifm("\t" + opcode + "\t" + op1 + "\t\t", end="")
     elif op3 == "":
@@ -60,22 +54,18 @@ def nasm_instruction(opcode, op1="", op2="", op3="", comment=""):
     nasm_comment(comment)
 
 
-"""
-Retourne le nom d'une nouvelle étiquette
-"""
-
-
 def nasm_nouvelle_etiquette():
+    """
+    Retourne le nom d'une nouvelle étiquette
+    """
     num_etiquette_courante += 1
     return "e" + str(num_etiquette_courante)
 
 
-"""
-Affiche le code nasm correspondant à tout un programme
-"""
-
-
 def gen_programme(programme):
+    """
+    Affiche le code nasm correspondant à tout un programme
+    """
     printifm('%include\t"io.asm"')
     printifm('section\t.bss')
     printifm(
@@ -90,22 +80,18 @@ def gen_programme(programme):
     nasm_instruction("int", "0x80", "", "", "exit")
 
 
-"""
-Affiche le code nasm correspondant à une suite d'instructions
-"""
-
-
 def gen_listeInstructions(listeInstructions):
+    """
+    Affiche le code nasm correspondant à une suite d'instructions
+    """
     for instruction in listeInstructions.instructions:
         gen_instruction(instruction)
 
 
-"""
-Affiche le code nasm correspondant à une instruction
-"""
-
-
 def gen_instruction(instruction):
+    """
+    Affiche le code nasm correspondant à une instruction
+    """
     if type(instruction) == arbre_abstrait.Ecrire:
         gen_ecrire(instruction)
     else:
@@ -113,12 +99,10 @@ def gen_instruction(instruction):
         exit(0)
 
 
-"""
-Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
-"""
-
-
 def gen_ecrire(ecrire):
+    """
+    Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
+    """
     gen_expression(ecrire.exp)  #on calcule et empile la valeur d'expression
     nasm_instruction("pop", "eax", "", "",
                      "")  #on dépile la valeur d'expression sur eax
@@ -126,12 +110,10 @@ def gen_ecrire(ecrire):
                      "")  #on envoie la valeur d'eax sur la sortie standard
 
 
-"""
-Affiche le code nasm pour calculer et empiler la valeur d'une expression
-"""
-
-
 def gen_expression(expression):
+    """
+    Affiche le code nasm pour calculer et empiler la valeur d'une expression
+    """
     if type(expression) == arbre_abstrait.Operation:
         gen_operation(
             expression)  #on calcule et empile la valeur de l'opération
@@ -143,12 +125,10 @@ def gen_expression(expression):
         exit(0)
 
 
-"""
-Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
-"""
-
-
 def gen_operation(operation):
+    """
+    Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
+    """
     op = operation.op
 
     gen_expression(operation.exp1)  #on calcule et empile la valeur de exp1
