@@ -100,23 +100,38 @@ def gen_instruction(instruction: arbre_abstrait.AST):
         exit(0)
 
 
-def gen_ecrire(arg: arbre_abstrait.AST):
-    """
-    Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
-    """
-    gen_expression(arg)  # on calcule et empile la valeur d'expression
-    nasm_instruction("pop", "eax", "", "",
-                     "")  # on dépile la valeur d'expression sur eax
-    nasm_instruction("call", "iprintLF", "", "",
-                     "")  # on envoie la valeur d'eax sur la sortie standard
+class Builtins:
+
+    @staticmethod
+    def ecrire(arg: arbre_abstrait.AST):
+        """
+        Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
+        """
+        # on calcule et empile la valeur d'expression
+        gen_expression(arg)
+        # on dépile la valeur d'expression sur eax
+        nasm_instruction("pop", "eax", "", "", "")
+        # on envoie la valeur d'eax sur la sortie standard
+        nasm_instruction("call", "iprintLF", "", "", "")
+
+    @staticmethod
+    def lire():
+        """
+        Affiche le code nasm correspondant au fait de lire un entier sur l'entrée standard et de le mettre dans une variable
+        """
+        nasm_instruction("mov", "eax", "sinput", "", "")
+        nasm_instruction("call", "readline", "", "", "")
+        nasm_instruction("call", "atoi", "", "", "")
+        nasm_instruction("push", "eax", "", "", "")
 
 
 def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction):
     """
     Affiche le code nasm correspondant à l'appel d'une fonction
     """
-    if fonction.name == "ecrire":
-        gen_ecrire(fonction.args[0])
+    print(type(*fonction.args))
+    if fct := getattr(Builtins, fonction.name.valeur):
+        fct(*fonction.args)
     else:
         print("type fonction inconnu", fonction.name)
         exit(0)
@@ -129,9 +144,10 @@ def gen_expression(expression: arbre_abstrait.AST):
     if type(expression) == arbre_abstrait.Operation:
         gen_operation(
             expression)  #on calcule et empile la valeur de l'opération
-    elif type(expression) == arbre_abstrait.Entier:
-        nasm_instruction("push", str(expression.valeur), "", "", "")
-        #on met sur la pile la valeur entière
+    elif type(expression) == arbre_abstrait.Entier or type(
+            expression) == arbre_abstrait.Booleen:
+        # on met sur la pile la valeur entière
+        nasm_instruction("push", str(int(expression.valeur)), "", "", "")
     else:
         print("type d'expression inconnu", type(expression))
         exit(0)
