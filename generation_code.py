@@ -139,7 +139,6 @@ def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction):
     """
     Affiche le code nasm correspondant à l'appel d'une fonction
     """
-    print(type(*fonction.args))
     if fct := getattr(Builtins, fonction.name.valeur):
         fct(*fonction.args)
     else:
@@ -187,16 +186,7 @@ def gen_operation(operation: arbre_abstrait.Operation):
         "/": "div",
         "%": "mod",
         "et": "and",
-        "ou": "or"
-    }
-    target = {
-        "+": "eax",
-        "*": "eax",
-        "-": "eax",
-        "/": "eax",
-        "%": "edx",
-        "et": "eax",
-        "ou": "eax"
+        "ou": "or",
     }
     # Un dictionnaire qui associe à chaque opérateur sa fonction nasm
     # Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
@@ -234,11 +224,16 @@ def gen_operation(operation: arbre_abstrait.Operation):
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
 
+    elif op in ["<", "<=", ">", ">=", "==", "!="]:
+        gen_comparison(operation)
+
     else:
         print("type d'opération inconnu", op)
         exit(0)
 
-    nasm_instruction("push", target[op], "", "", "empile le résultat")
+    target = "edx" if op == "%" else "eax"
+
+    nasm_instruction("push", target, "", "", "empile le résultat")
 
 
 def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire):
@@ -259,6 +254,32 @@ def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire):
         exit(0)
 
     nasm_instruction("push", "eax", "", "", "empile le résultat")
+
+
+def gen_comparison(expr: arbre_abstrait.Operation):
+    """
+    Génère le code pour une comparaison
+    """
+
+    check_type(expr, arbre_abstrait.Type.ENTIER)
+
+    # On effectue la comparaison
+    nasm_instruction("cmp", "eax", "ebx", "", "compare eax et ebx")
+    if expr.op == '<':
+        nasm_instruction("setl", "al", "", "", "met al à 1 si eax < ebx")
+    elif expr.op == '<=':
+        nasm_instruction("setle", "al", "", "", "met al à 1 si eax <= ebx")
+    elif expr.op == '>':
+        nasm_instruction("setg", "al", "", "", "met al à 1 si eax > ebx")
+    elif expr.op == '>=':
+        nasm_instruction("setge", "al", "", "", "met al à 1 si eax >= ebx")
+    elif expr.op == '==':
+        nasm_instruction("sete", "al", "", "", "met al à 1 si eax == ebx")
+    elif expr.op == '!=':
+        nasm_instruction("setne", "al", "", "", "met al à 1 si eax != ebx")
+    else:
+        print("type de comparaison inconnu")
+        exit(0)
 
 
 def main():
