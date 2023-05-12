@@ -151,10 +151,11 @@ def gen_operation(operation: arbre_abstrait.Operation):
     nasm_instruction("pop", "eax", "", "",
                      "dépile la permière operande dans eax")
 
-    code = {"+": "add", "*": "imul"}
+    code = {"+": "add", "*": "imul", "-": "sub", "/": "div", "%": "mod"}
+    target = {"+": "eax", "*": "eax", "-": "eax", "/": "eax", "%": "edx"}
     # Un dictionnaire qui associe à chaque opérateur sa fonction nasm
     # Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
-    if op in ['+']:
+    if op in ['+', '-']:
         nasm_instruction(
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
@@ -162,7 +163,18 @@ def gen_operation(operation: arbre_abstrait.Operation):
         nasm_instruction(
             code[op], "ebx", "", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
-    nasm_instruction("push", "eax", "", "", "empile le résultat")
+    if op == '/':
+        nasm_instruction("mov", "edx", "0", "", "met edx à 0")
+
+        nasm_instruction(
+            code[op], "ebx", "", "", "effectue l'opération edx:eax" + op +
+            "ebx et met le résultat dans eax")
+    if op == '%':
+        nasm_instruction("mov", "edx", "0", "", "met edx à 0")
+        nasm_instruction(
+            "idiv", "ebx", "", "", "effectue l'opération eax" + op +
+            "ebx et met le résultat dans edx")
+    nasm_instruction("push", target[op], "", "", "empile le résultat")
 
 
 def main():
