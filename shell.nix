@@ -9,6 +9,8 @@ with pkgs; # Same for pkgs.
         with python3Packages; [
           sly
           yapf
+          syrupy
+          pytest
         ]))
       nasm
     ];

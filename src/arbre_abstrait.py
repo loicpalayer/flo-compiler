@@ -27,33 +27,19 @@ class AST:
         return json.dumps(self.to_json(), indent=2)
 
 
-class ListeInstructions(AST):
+class Programme(AST):
 
-    def __init__(self):
-        self.instructions: List[AST] = []
+    def __init__(self, instructions: List[AST]):
+        self.instructions = instructions
 
     def type(self) -> Type:
         return Type.AUTRE
 
     def to_json(self) -> JSON:
-        return {
-            "instructions": list(map(lambda x: x.to_json(), self.instructions))
-        }
+        return {"instructions": [i.to_json() for i in self.instructions]}
 
     def addInstruction(self, instruction: AST):
         self.instructions.append(instruction)
-
-
-class Programme(AST):
-
-    def __init__(self, listeInstructions: ListeInstructions):
-        self.listeInstructions = listeInstructions
-
-    def type(self) -> Type:
-        return Type.AUTRE
-
-    def to_json(self) -> JSON:
-        return {"listeInstructions": self.listeInstructions.to_json()}
 
 
 class Operation(AST):
@@ -170,15 +156,3 @@ class AppelFonction(AST):
 
     def to_json(self) -> JSON:
         return {"function_name": self.name.valeur, "args": self.args.to_json()}
-
-
-class Ecrire(AST):
-
-    def __init__(self, exp: AST):
-        self.exp = exp
-
-    def type(self) -> Type:
-        return Type.INCONNU
-
-    def to_json(self) -> JSON:
-        return {"ecrire": self.exp.to_json()}

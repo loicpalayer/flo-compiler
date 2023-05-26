@@ -1,0 +1,117 @@
+# serializer version: 1
+# name: test_syntaxe
+  '''
+  {
+    "instructions": [
+      {
+        "function_name": "bonsoir",
+        "args": [
+          {
+            "op": "==",
+            "lhs": {
+              "identifiant": "a"
+            },
+            "rhs": {
+              "op": ">=",
+              "lhs": {
+                "op": ">",
+                "lhs": {
+                  "op": "<=",
+                  "lhs": {
+                    "op": "<",
+                    "lhs": {
+                      "op": "!=",
+                      "lhs": {
+                        "identifiant": "b"
+                      },
+                      "rhs": {
+                        "identifiant": "c"
+                      }
+                    },
+                    "rhs": {
+                      "identifiant": "d"
+                    }
+                  },
+                  "rhs": {
+                    "identifiant": "e"
+                  }
+                },
+                "rhs": {
+                  "identifiant": "f"
+                }
+              },
+              "rhs": {
+                "identifiant": "g"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "function_name": "fonction1",
+        "args": [
+          {
+            "op": "et",
+            "lhs": {
+              "identifiant": "a"
+            },
+            "rhs": {
+              "op": "non",
+              "exp": {
+                "op": "ou",
+                "lhs": {
+                  "identifiant": "b"
+                },
+                "rhs": {
+                  "identifiant": "c"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "function_name": "ecrire",
+        "args": [
+          {
+            "op": "%",
+            "lhs": {
+              "op": "/",
+              "lhs": {
+                "op": "*",
+                "lhs": {
+                  "op": "-",
+                  "exp": {
+                    "op": "-",
+                    "lhs": {
+                      "op": "+",
+                      "lhs": {
+                        "identifiant": "a"
+                      },
+                      "rhs": {
+                        "identifiant": "b"
+                      }
+                    },
+                    "rhs": {
+                      "identifiant": "c"
+                    }
+                  }
+                },
+                "rhs": {
+                  "identifiant": "d"
+                }
+              },
+              "rhs": {
+                "identifiant": "e"
+              }
+            },
+            "rhs": {
+              "identifiant": "f"
+            }
+          }
+        ]
+      }
+    ]
+  }
+  '''
+# ---

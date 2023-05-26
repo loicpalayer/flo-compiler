@@ -1,4 +1,3 @@
-import sys
 from sly import Parser
 from src.analyse_lexicale import FloLexer
 import src.arbre_abstrait as arbre_abstrait
@@ -21,25 +20,18 @@ class FloParser(Parser):
     )
 
     # Règles gramaticales et actions associées
-
-    @_('listeInstructions')
-    def prog(self, p):
-        return arbre_abstrait.Programme(p[0])
-
     @_('instruction')
-    def listeInstructions(self, p):
-        l = arbre_abstrait.ListeInstructions()
-        l.instructions.append(p[0])
-        return l
+    def prog(self, p):
+        return arbre_abstrait.Programme([p.instruction])
 
-    @_('instruction listeInstructions')
-    def listeInstructions(self, p):
-        p[1].instructions.append(p[0])
-        return p[1]
+    @_('instruction prog')
+    def prog(self, p):
+        p.prog.addInstruction(p.instruction)
+        return p.prog
 
-    @_('ECRIRE "(" expr ")" ";"')
+    @_('expr ";"')
     def instruction(self, p):
-        return arbre_abstrait.Ecrire(p.expr)
+        return p.expr
 
     @_('bool')
     def expr(self, p):
@@ -87,9 +79,9 @@ class FloParser(Parser):
     def exprArith(self, p):
         return p[0]
 
-#    @_('IDENTIFIANT "(" function_arg ")"')
-#    def facteur(self, p):
-#        return arbre_abstrait.AppelFonction(p.IDENTIFIANT, p.function_arg)
+    @_('identifiant "(" function_arg ")"')
+    def facteur(self, p):
+        return arbre_abstrait.AppelFonction(p.identifiant, p.function_arg)
 
     @_('ENTIER')
     def facteur(self, p):
@@ -99,15 +91,18 @@ class FloParser(Parser):
     def facteur(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
+    @_('IDENTIFIANT')
+    def identifiant(self, p):
+        return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
-#    @_('expr "," function_arg ')
-#    def function_arg(self, p):
-#        p.function_arg.append(p.expr)
-#        return p.function_arg
+    @_('function_arg "," expr')
+    def function_arg(self, p):
+        p.function_arg.append(p.expr)
+        return p.function_arg
 
-#    @_('expr')
-#    def function_arg(self, p):
-#        return [p.expr]
+    @_('expr')
+    def function_arg(self, p):
+        return arbre_abstrait.FunctionArgs([p.expr])
 
 
 def analyse_syntaxique(input):
