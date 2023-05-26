@@ -170,3 +170,15 @@ class AppelFonction(AST):
 
     def to_json(self) -> JSON:
         return {"function_name": self.name.valeur, "args": self.args.to_json()}
+
+
+class Ecrire(AST):
+
+    def __init__(self, exp: AST):
+        self.exp = exp
+
+    def type(self) -> Type:
+        return Type.INCONNU
+
+    def to_json(self) -> JSON:
+        return {"ecrire": self.exp.to_json()}

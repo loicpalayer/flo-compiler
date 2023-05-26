@@ -7,7 +7,7 @@ class FloLexer(Lexer):
     tokens = {
         TYPE, IDENTIFIANT, ENTIER, BOOLEEN, ET, OU, NON, SI, SINONSI, SINON,
         TANTQUE, RETOURNER, EGAL, DIFFERENT, INFERIEUR_OU_EGAL,
-        SUPERIEUR_OU_EGAL, INFERIEUR, SUPERIEUR
+        SUPERIEUR_OU_EGAL, INFERIEUR, SUPERIEUR, ECRIRE
     }
 
     #Les caractères litéraux sont des caractères uniques qui sont retournés tel quel quand rencontré par l'analyse lexicale.
@@ -29,6 +29,7 @@ class FloLexer(Lexer):
     # cas spéciaux:
     IDENTIFIANT['entier'] = TYPE
     IDENTIFIANT['booleen'] = TYPE
+    IDENTIFIANT['ecrire'] = ECRIRE
     IDENTIFIANT['et'] = ET
     IDENTIFIANT['ou'] = OU
     IDENTIFIANT['non'] = NON
