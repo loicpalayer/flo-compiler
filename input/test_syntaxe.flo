@@ -1,3 +1,0 @@
-ecrire(- (a + b - c) * d / e % f);
-ecrire(a et non(b ou c));
-ecrire(a == b != c < d <= e > f >= g);
