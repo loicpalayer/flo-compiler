@@ -1,7 +1,7 @@
 import sys
 from sly import Parser
-from analyse_lexicale import FloLexer
-import arbre_abstrait
+from src.analyse_lexicale import FloLexer
+import src.arbre_abstrait as arbre_abstrait
 
 
 class FloParser(Parser):
@@ -106,16 +106,7 @@ class FloParser(Parser):
         return p[0]
 
 
-if __name__ == '__main__':
+def analyse_syntaxique(input):
     lexer = FloLexer()
     parser = FloParser()
-    if len(sys.argv) < 2:
-        print("usage: python3 analyse_syntaxique.py NOM_FICHIER_SOURCE.flo")
-    else:
-        with open(sys.argv[1], "r") as f:
-            data = f.read()
-            try:
-                arbre = parser.parse(lexer.tokenize(data))
-                print(arbre)
-            except EOFError:
-                exit()
+    return parser.parse(lexer.tokenize(input)).to_json()

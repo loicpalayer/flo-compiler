@@ -1,7 +1,7 @@
 import sys
-from analyse_lexicale import FloLexer
-from analyse_syntaxique import FloParser
-import arbre_abstrait
+from src.analyse_lexicale import FloLexer
+from src.analyse_syntaxique import FloParser
+import src.arbre_abstrait as arbre_abstrait
 
 num_etiquette_courante = -1  #Permet de donner des noms différents à toutes les étiquettes (en les appelant e0, e1,e2,...)
 
