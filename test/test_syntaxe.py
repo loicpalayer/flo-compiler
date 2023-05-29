@@ -109,7 +109,12 @@ def test_function_declare(snapshot):
         retourner a;
     }
 
+    booleen fonction2 () {
+        retourner 1;
+    }
+
     fonction1(a, b, c);
+    fonction2();
     """
 
     assert get_out(input) == snapshot

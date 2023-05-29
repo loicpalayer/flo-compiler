@@ -165,6 +165,11 @@ class FloParser(Parser):
                                        p.prog,
                                        arbre_abstrait.Type.from_str(p.TYPE))
 
+    @_('TYPE identifiant "(" ")" "{" prog "}"')
+    def function(self, p):
+        return arbre_abstrait.Function(p.identifiant, [], p.prog,
+                                       arbre_abstrait.Type.from_str(p.TYPE))
+
     @_('function')
     def instruction(self, p):
         return p.function

@@ -116,6 +116,22 @@
         "return_type": "ENTIER"
       },
       {
+        "name": {
+          "identifiant": "fonction2"
+        },
+        "args": [],
+        "body": {
+          "instructions": [
+            {
+              "return_value": {
+                "entier": 1
+              }
+            }
+          ]
+        },
+        "return_type": "BOOLEEN"
+      },
+      {
         "function_name": "fonction1",
         "args": [
           {
@@ -128,6 +144,10 @@
             "identifiant": "c"
           }
         ]
+      },
+      {
+        "function_name": "fonction2",
+        "args": []
       }
     ]
   }
