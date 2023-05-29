@@ -4,7 +4,7 @@ import json
 
 
 def get_out(input) -> str:
-    out = analyse_syntaxique(input)
+    out = analyse_syntaxique(input).to_json()
     return json.dumps(out, indent=2)
 
 

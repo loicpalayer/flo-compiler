@@ -180,7 +180,7 @@ class FloParser(Parser):
         return p.function
 
 
-def analyse_syntaxique(input):
+def analyse_syntaxique(input) -> arbre_abstrait.Programme:
     lexer = FloLexer()
     parser = FloParser()
-    return parser.parse(lexer.tokenize(input)).to_json()
+    return parser.parse(lexer.tokenize(input))

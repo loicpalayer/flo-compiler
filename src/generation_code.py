@@ -1,12 +1,13 @@
 import sys
-from src.analyse_lexicale import FloLexer
-from src.analyse_syntaxique import FloParser
+from typing import List
+from src.analyse_syntaxique import analyse_syntaxique
 import src.arbre_abstrait as arbre_abstrait
+from src.symbol_table import SymbolTable
 
 num_etiquette_courante = -1  #Permet de donner des noms différents à toutes les étiquettes (en les appelant e0, e1,e2,...)
 
 afficher_table = False
-afficher_nasm = False
+afficher_nasm = True
 
 
 def check_type(expr: arbre_abstrait.AST, expected: arbre_abstrait.Type):
@@ -73,7 +74,7 @@ def nasm_nouvelle_etiquette():
     return "e" + str(num_etiquette_courante)
 
 
-def gen_programme(programme: arbre_abstrait.Programme):
+def gen_entrypoint(programme: arbre_abstrait.Programme):
     """
     Affiche le code nasm correspondant à tout un programme
     """
@@ -85,47 +86,85 @@ def gen_programme(programme: arbre_abstrait.Programme):
     printifm('v$a:	resd	1')
     printifm('section\t.text')
     printifm('global _start')
-    printifm('_start:')
-    gen_listeInstructions(programme.listeInstructions)
+
+    symbol_table = SymbolTable.from_program(programme)
+    printift(symbol_table)
+
+    gen_programme(programme, symbol_table, is_main=True)
+
     nasm_instruction("mov", "eax", "1", "", "1 est le code de SYS_EXIT")
     nasm_instruction("int", "0x80", "", "", "exit")
 
 
-def gen_listeInstructions(listeInstructions: arbre_abstrait.ListeInstructions):
+def gen_programme(programme: arbre_abstrait.Programme,
+                  symbol_table: SymbolTable,
+                  is_main=False):
+
+    funcs = [
+        instruction for instruction in programme.instructions
+        if isinstance(instruction, arbre_abstrait.Function)
+    ]
+    for func in funcs:
+        gen_function(func, symbol_table)
+
+    if is_main:
+        printifm('_start:')
+
+    instrs = [
+        instruction for instruction in programme.instructions
+        if not isinstance(instruction, arbre_abstrait.Function)
+    ]
+    gen_listeInstructions(instrs, symbol_table)
+
+
+def gen_listeInstructions(instructions: List[arbre_abstrait.AST],
+                          symbol_table: SymbolTable):
     """
     Affiche le code nasm correspondant à une suite d'instructions
     """
-    for instruction in listeInstructions.instructions:
-        gen_instruction(instruction)
+    for instruction in instructions:
+        gen_instruction(instruction, symbol_table)
 
 
-def gen_instruction(instruction: arbre_abstrait.AST):
+def gen_return(return_: arbre_abstrait.Return, symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à un return. Met sa valeur dans eax avant de revenir
+à l’appel de la fonction grâce à l’instruction nasm ret
+    """
+    gen_expression(return_.value, symbol_table)
+    nasm_instruction("pop", "eax", "", "", "")
+    nasm_instruction("ret", "", "", "", "retourne à l'appel de la fonction")
+
+
+def gen_instruction(instruction: arbre_abstrait.AST,
+                    symbol_table: SymbolTable):
     """
     Affiche le code nasm correspondant à une instruction
     """
-    if type(instruction) == arbre_abstrait.AppelFonction:
-        gen_appel_fonction(instruction)
+    if isinstance(instruction, arbre_abstrait.Function):
+        gen_function(instruction, symbol_table)
+    elif isinstance(instruction, arbre_abstrait.Return):
+        gen_return(instruction, symbol_table)
     else:
-        print("type instruction inconnu", type(instruction))
-        exit(0)
+        gen_expression(instruction, symbol_table)
 
 
 class Builtins:
 
     @staticmethod
-    def ecrire(arg: arbre_abstrait.AST):
+    def ecrire(arg: arbre_abstrait.AST, symbol_table: SymbolTable):
         """
         Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
         """
         # on calcule et empile la valeur d'expression
-        gen_expression(arg)
+        gen_expression(arg, symbol_table)
         # on dépile la valeur d'expression sur eax
         nasm_instruction("pop", "eax", "", "", "")
         # on envoie la valeur d'eax sur la sortie standard
         nasm_instruction("call", "iprintLF", "", "", "")
 
     @staticmethod
-    def lire():
+    def lire(symbol_table: SymbolTable):
         """
         Affiche le code nasm correspondant au fait de lire un entier sur l'entrée standard et de le mettre dans une variable
         """
@@ -135,44 +174,78 @@ class Builtins:
         nasm_instruction("push", "eax", "", "", "")
 
 
-def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction):
+def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction,
+                       symbol_table: SymbolTable):
     """
     Affiche le code nasm correspondant à l'appel d'une fonction
     """
-    if fct := getattr(Builtins, fonction.name.valeur):
-        fct(*fonction.args)
+    if fct := getattr(Builtins, fonction.name.valeur, None):
+        fct(*fonction.args, symbol_table=symbol_table)
+    elif fonction.name in symbol_table:
+        gen_appel_fonction_user(fonction, symbol_table)
     else:
-        print("type fonction inconnu", fonction.name)
+        print("fonction inconnue", fonction.name)
         exit(0)
 
 
-def gen_expression(expression: arbre_abstrait.AST):
+def gen_appel_fonction_user(fonction: arbre_abstrait.AppelFonction,
+                            symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à l'appel d'une fonction utilisateur
+    """
+    # on empile les arguments de la fonction
+    for arg in fonction.args:
+        gen_expression(arg, symbol_table)
+
+    # on appelle la fonction
+    nasm_instruction("call", f"_{fonction.name.valeur}", "", "", "")
+
+    # on empile la valeur de retour de la fonction
+    nasm_instruction("push", "eax", "", "", "")
+
+
+def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à la définition d'une fonction
+    """
+    printift(fonction)
+
+    printifm(f"_{fonction.name.valeur}:")
+    gen_listeInstructions(fonction.body.instructions, symbol_table)
+
+
+def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
     """
     Affiche le code nasm pour calculer et empiler la valeur d'une expression
     """
     if type(expression) == arbre_abstrait.Operation:
         # on calcule et empile la valeur de l'opération
-        gen_operation(expression)
+        gen_operation(expression, symbol_table)
     elif type(expression) == arbre_abstrait.OperationUnaire:
-        gen_operation_unaire(expression)
+        gen_operation_unaire(expression, symbol_table)
     elif type(expression) == arbre_abstrait.Entier or type(
             expression) == arbre_abstrait.Booleen:
         # on met sur la pile la valeur entière
         nasm_instruction("push", str(int(expression.valeur)), "", "", "")
+    elif type(expression) == arbre_abstrait.AppelFonction:
+        gen_appel_fonction(expression, symbol_table)
     else:
         print("type d'expression inconnu", type(expression))
         exit(0)
 
 
-def gen_operation(operation: arbre_abstrait.Operation):
+def gen_operation(operation: arbre_abstrait.Operation,
+                  symbol_table: SymbolTable):
     """
     Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
     """
 
     op = operation.op
 
-    gen_expression(operation.lhs)  # on calcule et empile la valeur de exp1
-    gen_expression(operation.rhs)  # on calcule et empile la valeur de exp2
+    gen_expression(operation.lhs,
+                   symbol_table)  # on calcule et empile la valeur de exp1
+    gen_expression(operation.rhs,
+                   symbol_table)  # on calcule et empile la valeur de exp2
 
     nasm_instruction("pop", "ebx", "", "",
                      "dépile la seconde operande dans ebx")
@@ -236,10 +309,12 @@ def gen_operation(operation: arbre_abstrait.Operation):
     nasm_instruction("push", target, "", "", "empile le résultat")
 
 
-def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire):
+def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire,
+                         symbol_table: SymbolTable):
     op = operation.op
 
-    gen_expression(operation.exp)  # on calcule et empile la valeur de exp
+    gen_expression(operation.exp,
+                   symbol_table)  # on calcule et empile la valeur de exp
     nasm_instruction("pop", "eax", "", "",
                      "dépile la première operande dans eax")
 
@@ -287,8 +362,6 @@ def main():
     global afficher_tableSymboles
 
     afficher_nasm = True
-    lexer = FloLexer()
-    parser = FloParser()
     if len(sys.argv) < 3 or sys.argv[1] not in ["-nasm", "-table"]:
         print(
             "usage: python3 generation_code.py -nasm|-table NOM_FICHIER_SOURCE.flo"
@@ -296,13 +369,14 @@ def main():
         exit(0)
     if sys.argv[1] == "-nasm":
         afficher_nasm = True
-    else:
+    if sys.argv[1] == "-table":
         afficher_tableSymboles = True
+
     with open(sys.argv[2], "r") as f:
         data = f.read()
         try:
-            arbre = parser.parse(lexer.tokenize(data))
-            gen_programme(arbre)
+            arbre = analyse_syntaxique(data)
+            gen_entrypoint(arbre)
         except EOFError:
             exit()
 
