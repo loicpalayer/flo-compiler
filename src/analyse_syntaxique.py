@@ -95,6 +95,24 @@ class FloParser(Parser):
     def identifiant(self, p):
         return arbre_abstrait.Identifiant(p.IDENTIFIANT)
 
+    @_('SI "(" expr ")" "{" prog "}"')
+    def si(self, p):
+        return arbre_abstrait.If(p.expr, p.prog, None)
+
+    @_('si SINONSI "(" expr ")" "{" prog "}"')
+    def si(self, p):
+        p.si.add_elif(p.expr, p.prog)
+        return p.si
+
+    @_('si SINON "{" prog "}"')
+    def cond(self, p):
+        p.si.add_else(p.prog)
+        return p.si
+
+    @_('cond')
+    def instruction(self, p):
+        return p.cond
+
     @_('function_arg "," expr')
     def function_arg(self, p):
         p.function_arg.append(p.expr)

@@ -3,6 +3,11 @@ from src.analyse_syntaxique import analyse_syntaxique
 import json
 
 
+def get_out(input) -> str:
+    out = analyse_syntaxique(input)
+    return json.dumps(out, indent=2)
+
+
 def test_syntaxe(snapshot):
     input = """
     ecrire(- (a + b - c) * d / e % f);
@@ -10,7 +15,62 @@ def test_syntaxe(snapshot):
     bonsoir(a == b != c < d <= e > f >= g);
     """
 
-    out = analyse_syntaxique(input)
-    actual = json.dumps(out, indent=2)
+    assert get_out(input) == snapshot
 
-    assert snapshot == actual
+
+def test_parse_while(snapshot):
+    input = """
+   tantque (a) {
+       ecrire(a);
+   }
+   """
+
+    assert get_out(input) == snapshot
+
+
+def test_parse_if(snapshot):
+    input = """
+    si (a) {
+        ecrire(a);
+    }
+    sinonsi (b) {
+        ecrire(b);
+    }
+    sinonsi (c) {
+        ecrire(c);
+        ecrire(d);
+    }
+    sinon {
+        ecrire(c);
+    }
+    """
+
+    assert get_out(input) == snapshot
+
+
+def test_invalid_parse_if():
+    INVALID = [
+        """
+    si (a) {
+        ecrire(a);
+    }
+    sinon {
+        ecrire(d);
+    }
+    sinonsi (b) {
+        ecrire(b);
+    }
+    """,
+        """
+    sinon {
+        ecrire(a);
+    }
+    """,
+    ]
+
+    for input in INVALID:
+        try:
+            get_out(input)
+            assert False
+        except Exception as e:
+            pass

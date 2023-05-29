@@ -1,6 +1,6 @@
 import enum
 import json
-from typing import List, TypeAlias
+from typing import List, Optional, TypeAlias
 
 JSON: TypeAlias = dict[str,
                        "JSON"] | list["JSON"] | str | int | float | bool | None
@@ -125,6 +125,71 @@ class Identifiant(AST):
 
     def to_json(self) -> JSON:
         return {"identifiant": self.valeur}
+
+
+class If(AST):
+
+    def __init__(self, condition: AST, body: Programme,
+                 orelse: Optional[Programme]):
+        self.condition = condition
+        self.body = body
+        self.orelse = orelse or Programme([])
+
+    def type(self) -> Type:
+        return Type.AUTRE
+
+    def add_elif(self, condition: AST, body: Programme):
+        if self.orelse.instructions and isinstance(
+                self.orelse.instructions[-1], If):
+            self.orelse.instructions[-1].add_elif(condition, body)
+        else:
+            self.orelse.addInstruction(If(condition, body, None))
+
+    def add_else(self, body: Programme):
+        self.orelse.addInstruction(body)
+
+    def to_json(self) -> JSON:
+        return {
+            "condition": self.condition.to_json(),
+            "body": self.body.to_json(),
+            "orelse": self.orelse.to_json()
+        }
+
+
+class While(AST):
+
+    def __init__(self, condition: AST, body: Programme):
+        self.condition = condition
+        self.body = body
+
+    def type(self) -> Type:
+        return Type.AUTRE
+
+    def to_json(self) -> JSON:
+        return {
+            "condition": self.condition.to_json(),
+            "body": self.body.to_json()
+        }
+
+
+class Function(AST):
+
+    def __init__(self, name: Identifiant, args: List[Identifiant],
+                 body: Programme, return_type: Type):
+        self.name = name
+        self.args = args
+        self.body = body
+        self.return_type = return_type
+
+    def type(self) -> Type:
+        return Type.FONCTION
+
+    def to_json(self) -> JSON:
+        return {
+            "function_name": self.name.valeur,
+            "args": [arg.valeur for arg in self.args],
+            "body": self.body.to_json()
+        }
 
 
 class FunctionArgs(AST):
