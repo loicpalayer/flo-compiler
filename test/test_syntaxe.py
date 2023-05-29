@@ -72,5 +72,15 @@ def test_invalid_parse_if():
         try:
             get_out(input)
             assert False
-        except Exception as e:
+        except Exception:
             pass
+
+
+def test_declare_assign(snapshot):
+    input = """
+    entier a;
+    a = 1;
+    booleen b = vrai;
+    """
+
+    assert get_out(input) == snapshot

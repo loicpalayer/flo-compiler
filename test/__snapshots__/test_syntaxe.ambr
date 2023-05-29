@@ -1,4 +1,36 @@
 # serializer version: 1
+# name: test_declare_assign
+  '''
+  {
+    "instructions": [
+      {
+        "name": {
+          "identifiant": "b"
+        },
+        "type": "BOOLEEN",
+        "value": {
+          "identifiant": "vrai"
+        }
+      },
+      {
+        "name": {
+          "identifiant": "a"
+        },
+        "value": {
+          "entier": 1
+        }
+      },
+      {
+        "name": {
+          "identifiant": "a"
+        },
+        "type": "ENTIER",
+        "value": null
+      }
+    ]
+  }
+  '''
+# ---
 # name: test_parse_if
   '''
   {

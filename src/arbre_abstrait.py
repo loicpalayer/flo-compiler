@@ -13,6 +13,14 @@ class Type(enum.Enum):
     FONCTION = enum.auto()
     AUTRE = enum.auto()
 
+    @staticmethod
+    def from_str(s: str) -> "Type":
+        if s == "entier":
+            return Type.ENTIER
+        if s == "booleen":
+            return Type.BOOLEEN
+        return Type.INCONNU
+
 
 class AST:
 
@@ -65,7 +73,6 @@ class Operation(AST):
 class OperationUnaire(AST):
 
     def __init__(self, op: str, exp: AST):
-        print("OperationUnaire", op, exp)
         self.op = op
         self.exp = exp
 
@@ -170,6 +177,37 @@ class While(AST):
             "condition": self.condition.to_json(),
             "body": self.body.to_json()
         }
+
+
+class Declaration(AST):
+
+    def __init__(self, name: Identifiant, _type: Type, value: Optional[AST]):
+        self.name = name
+        self._type = _type
+        self.value = value
+
+    def type(self) -> Type:
+        return self._type
+
+    def to_json(self) -> JSON:
+        return {
+            "name": self.name.to_json(),
+            "type": self.type().name,
+            "value": self.value.to_json() if self.value else None
+        }
+
+
+class Assignment(AST):
+
+    def __init__(self, name: Identifiant, value: AST):
+        self.name = name
+        self.value = value
+
+    def type(self) -> Type:
+        return Type.AUTRE
+
+    def to_json(self) -> JSON:
+        return {"name": self.name.to_json(), "value": self.value.to_json()}
 
 
 class Function(AST):

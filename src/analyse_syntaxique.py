@@ -117,6 +117,22 @@ class FloParser(Parser):
     def instruction(self, p):
         return p.cond
 
+    @_('TYPE identifiant ";"')
+    def instruction(self, p):
+        return arbre_abstrait.Declaration(p.identifiant,
+                                          arbre_abstrait.Type.from_str(p.TYPE),
+                                          None)
+
+    @_('TYPE identifiant "=" expr ";"')
+    def instruction(self, p):
+        return arbre_abstrait.Declaration(p.identifiant,
+                                          arbre_abstrait.Type.from_str(p.TYPE),
+                                          p.expr)
+
+    @_('identifiant "=" expr ";"')
+    def instruction(self, p):
+        return arbre_abstrait.Assignment(p.identifiant, p.expr)
+
     @_('function_arg "," expr')
     def function_arg(self, p):
         p.function_arg.append(p.expr)
