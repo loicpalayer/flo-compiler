@@ -5,12 +5,10 @@
     "instructions": [
       {
         "name": {
-          "identifiant": "b"
+          "identifiant": "a"
         },
-        "type": "BOOLEEN",
-        "value": {
-          "identifiant": "vrai"
-        }
+        "type": "ENTIER",
+        "value": null
       },
       {
         "name": {
@@ -22,10 +20,12 @@
       },
       {
         "name": {
-          "identifiant": "a"
+          "identifiant": "b"
         },
-        "type": "ENTIER",
-        "value": null
+        "type": "BOOLEEN",
+        "value": {
+          "identifiant": "vrai"
+        }
       }
     ]
   }
@@ -81,7 +81,7 @@
                           "function_name": "ecrire",
                           "args": [
                             {
-                              "identifiant": "d"
+                              "identifiant": "c"
                             }
                           ]
                         },
@@ -89,7 +89,7 @@
                           "function_name": "ecrire",
                           "args": [
                             {
-                              "identifiant": "c"
+                              "identifiant": "d"
                             }
                           ]
                         }
@@ -151,6 +151,70 @@
   {
     "instructions": [
       {
+        "function_name": "ecrire",
+        "args": [
+          {
+            "op": "%",
+            "lhs": {
+              "op": "/",
+              "lhs": {
+                "op": "*",
+                "lhs": {
+                  "op": "-",
+                  "exp": {
+                    "op": "-",
+                    "lhs": {
+                      "op": "+",
+                      "lhs": {
+                        "identifiant": "a"
+                      },
+                      "rhs": {
+                        "identifiant": "b"
+                      }
+                    },
+                    "rhs": {
+                      "identifiant": "c"
+                    }
+                  }
+                },
+                "rhs": {
+                  "identifiant": "d"
+                }
+              },
+              "rhs": {
+                "identifiant": "e"
+              }
+            },
+            "rhs": {
+              "identifiant": "f"
+            }
+          }
+        ]
+      },
+      {
+        "function_name": "fonction1",
+        "args": [
+          {
+            "op": "et",
+            "lhs": {
+              "identifiant": "a"
+            },
+            "rhs": {
+              "op": "non",
+              "exp": {
+                "op": "ou",
+                "lhs": {
+                  "identifiant": "b"
+                },
+                "rhs": {
+                  "identifiant": "c"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
         "function_name": "bonsoir",
         "args": [
           {
@@ -190,70 +254,6 @@
               "rhs": {
                 "identifiant": "g"
               }
-            }
-          }
-        ]
-      },
-      {
-        "function_name": "fonction1",
-        "args": [
-          {
-            "op": "et",
-            "lhs": {
-              "identifiant": "a"
-            },
-            "rhs": {
-              "op": "non",
-              "exp": {
-                "op": "ou",
-                "lhs": {
-                  "identifiant": "b"
-                },
-                "rhs": {
-                  "identifiant": "c"
-                }
-              }
-            }
-          }
-        ]
-      },
-      {
-        "function_name": "ecrire",
-        "args": [
-          {
-            "op": "%",
-            "lhs": {
-              "op": "/",
-              "lhs": {
-                "op": "*",
-                "lhs": {
-                  "op": "-",
-                  "exp": {
-                    "op": "-",
-                    "lhs": {
-                      "op": "+",
-                      "lhs": {
-                        "identifiant": "a"
-                      },
-                      "rhs": {
-                        "identifiant": "b"
-                      }
-                    },
-                    "rhs": {
-                      "identifiant": "c"
-                    }
-                  }
-                },
-                "rhs": {
-                  "identifiant": "d"
-                }
-              },
-              "rhs": {
-                "identifiant": "e"
-              }
-            },
-            "rhs": {
-              "identifiant": "f"
             }
           }
         ]

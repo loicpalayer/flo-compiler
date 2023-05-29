@@ -24,7 +24,7 @@ class FloParser(Parser):
     def prog(self, p):
         return arbre_abstrait.Programme([p.instruction])
 
-    @_('instruction prog')
+    @_('prog instruction')
     def prog(self, p):
         p.prog.addInstruction(p.instruction)
         return p.prog
