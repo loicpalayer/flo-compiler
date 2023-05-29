@@ -1,4 +1,119 @@
 # serializer version: 1
+# name: test_parse_if
+  '''
+  {
+    "instructions": [
+      {
+        "condition": {
+          "identifiant": "a"
+        },
+        "body": {
+          "instructions": [
+            {
+              "function_name": "ecrire",
+              "args": [
+                {
+                  "identifiant": "a"
+                }
+              ]
+            }
+          ]
+        },
+        "orelse": {
+          "instructions": [
+            {
+              "condition": {
+                "identifiant": "b"
+              },
+              "body": {
+                "instructions": [
+                  {
+                    "function_name": "ecrire",
+                    "args": [
+                      {
+                        "identifiant": "b"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "orelse": {
+                "instructions": [
+                  {
+                    "condition": {
+                      "identifiant": "c"
+                    },
+                    "body": {
+                      "instructions": [
+                        {
+                          "function_name": "ecrire",
+                          "args": [
+                            {
+                              "identifiant": "d"
+                            }
+                          ]
+                        },
+                        {
+                          "function_name": "ecrire",
+                          "args": [
+                            {
+                              "identifiant": "c"
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    "orelse": {
+                      "instructions": []
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "instructions": [
+                {
+                  "function_name": "ecrire",
+                  "args": [
+                    {
+                      "identifiant": "c"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+  '''
+# ---
+# name: test_parse_while
+  '''
+  {
+    "instructions": [
+      {
+        "condition": {
+          "identifiant": "a"
+        },
+        "body": {
+          "instructions": [
+            {
+              "function_name": "ecrire",
+              "args": [
+                {
+                  "identifiant": "a"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+  '''
+# ---
 # name: test_syntaxe
   '''
   {

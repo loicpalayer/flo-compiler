@@ -109,6 +109,10 @@ class FloParser(Parser):
         p.si.add_else(p.prog)
         return p.si
 
+    @_('TANTQUE "(" expr ")" "{" prog "}"')
+    def instruction(self, p):
+        return arbre_abstrait.While(p.expr, p.prog)
+
     @_('cond')
     def instruction(self, p):
         return p.cond
