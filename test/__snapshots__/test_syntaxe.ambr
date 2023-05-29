@@ -146,6 +146,19 @@
   }
   '''
 # ---
+# name: test_return
+  '''
+  {
+    "instructions": [
+      {
+        "return_value": {
+          "entier": 1
+        }
+      }
+    ]
+  }
+  '''
+# ---
 # name: test_syntaxe
   '''
   {

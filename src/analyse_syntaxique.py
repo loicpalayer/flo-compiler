@@ -138,6 +138,10 @@ class FloParser(Parser):
         p.function_arg.append(p.expr)
         return p.function_arg
 
+    @_('RETOURNER expr ";"')
+    def instruction(self, p):
+        return arbre_abstrait.Return(p.expr)
+
     @_('expr')
     def function_arg(self, p):
         return arbre_abstrait.FunctionArgs([p.expr])

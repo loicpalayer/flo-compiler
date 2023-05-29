@@ -210,6 +210,18 @@ class Assignment(AST):
         return {"name": self.name.to_json(), "value": self.value.to_json()}
 
 
+class Return(AST):
+
+    def __init__(self, value: AST):
+        self.value = value
+
+    def type(self) -> Type:
+        return Type.AUTRE
+
+    def to_json(self) -> JSON:
+        return {"return_value": self.value.to_json()}
+
+
 class Function(AST):
 
     def __init__(self, name: Identifiant, args: List[Identifiant],

@@ -84,3 +84,11 @@ def test_declare_assign(snapshot):
     """
 
     assert get_out(input) == snapshot
+
+
+def test_return(snapshot):
+    input = """
+    retourner 1;
+    """
+
+    assert get_out(input) == snapshot
