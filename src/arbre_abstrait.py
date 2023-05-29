@@ -224,7 +224,7 @@ class Return(AST):
 
 class Function(AST):
 
-    def __init__(self, name: Identifiant, args: List[Identifiant],
+    def __init__(self, name: Identifiant, args: List[Declaration],
                  body: Programme, return_type: Type):
         self.name = name
         self.args = args
@@ -236,9 +236,10 @@ class Function(AST):
 
     def to_json(self) -> JSON:
         return {
-            "function_name": self.name.valeur,
-            "args": [arg.valeur for arg in self.args],
-            "body": self.body.to_json()
+            "name": self.name.to_json(),
+            "args": [a.to_json() for a in self.args],
+            "body": self.body.to_json(),
+            "return_type": self.return_type.name
         }
 
 

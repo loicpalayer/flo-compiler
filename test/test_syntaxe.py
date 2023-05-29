@@ -100,3 +100,16 @@ def test_function_call(snapshot):
     """
 
     assert get_out(input) == snapshot
+
+
+def test_function_declare(snapshot):
+    input = """
+    entier fonction1(entier a, booleen b, booleen c) {
+        ecrire(a + b % c);
+        retourner a;
+    }
+
+    fonction1(a, b, c);
+    """
+
+    assert get_out(input) == snapshot

@@ -117,11 +117,15 @@ class FloParser(Parser):
     def instruction(self, p):
         return p.cond
 
-    @_('TYPE identifiant ";"')
-    def instruction(self, p):
+    @_('TYPE identifiant')
+    def decl(self, p):
         return arbre_abstrait.Declaration(p.identifiant,
                                           arbre_abstrait.Type.from_str(p.TYPE),
                                           None)
+
+    @_('decl ";"')
+    def instruction(self, p):
+        return p.decl
 
     @_('TYPE identifiant "=" expr ";"')
     def instruction(self, p):
@@ -146,9 +150,24 @@ class FloParser(Parser):
     def function_arg(self, p):
         return arbre_abstrait.FunctionArgs([p.expr])
 
-    @_('function_arg ";"')
+    @_('decl')
+    def function_decl_arg(self, p):
+        return [p.decl]
+
+    @_('function_decl_arg "," decl')
+    def function_decl_arg(self, p):
+        p.function_decl_arg.append(p.decl)
+        return p.function_decl_arg
+
+    @_('TYPE identifiant "(" function_decl_arg ")" "{" prog "}"')
+    def function(self, p):
+        return arbre_abstrait.Function(p.identifiant, p.function_decl_arg,
+                                       p.prog,
+                                       arbre_abstrait.Type.from_str(p.TYPE))
+
+    @_('function')
     def instruction(self, p):
-        return p.function_arg
+        return p.function
 
 
 def analyse_syntaxique(input):

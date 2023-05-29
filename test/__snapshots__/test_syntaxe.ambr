@@ -53,6 +53,86 @@
   }
   '''
 # ---
+# name: test_function_declare
+  '''
+  {
+    "instructions": [
+      {
+        "name": {
+          "identifiant": "fonction1"
+        },
+        "args": [
+          {
+            "name": {
+              "identifiant": "a"
+            },
+            "type": "ENTIER",
+            "value": null
+          },
+          {
+            "name": {
+              "identifiant": "b"
+            },
+            "type": "BOOLEEN",
+            "value": null
+          },
+          {
+            "name": {
+              "identifiant": "c"
+            },
+            "type": "BOOLEEN",
+            "value": null
+          }
+        ],
+        "body": {
+          "instructions": [
+            {
+              "function_name": "ecrire",
+              "args": [
+                {
+                  "op": "+",
+                  "lhs": {
+                    "identifiant": "a"
+                  },
+                  "rhs": {
+                    "op": "%",
+                    "lhs": {
+                      "identifiant": "b"
+                    },
+                    "rhs": {
+                      "identifiant": "c"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "return_value": {
+                "identifiant": "a"
+              }
+            }
+          ]
+        },
+        "return_type": "ENTIER"
+      },
+      {
+        "function_name": "fonction1",
+        "args": [
+          {
+            "identifiant": "a"
+          },
+          {
+            "identifiant": "b"
+          },
+          {
+            "identifiant": "c"
+          }
+        ]
+      }
+    ]
+  }
+  '''
+# ---
 # name: test_parse_if
   '''
   {
