@@ -83,6 +83,11 @@ class FloParser(Parser):
     def facteur(self, p):
         return arbre_abstrait.AppelFonction(p.identifiant, p.function_arg)
 
+    @_('identifiant "("  ")"')
+    def facteur(self, p):
+        return arbre_abstrait.AppelFonction(p.identifiant,
+                                            arbre_abstrait.FunctionArgs([]))
+
     @_('ENTIER')
     def facteur(self, p):
         return arbre_abstrait.Entier(p.ENTIER)
