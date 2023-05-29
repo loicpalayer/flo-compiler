@@ -31,6 +31,28 @@
   }
   '''
 # ---
+# name: test_function_call
+  '''
+  {
+    "instructions": [
+      {
+        "function_name": "fonction1",
+        "args": [
+          {
+            "identifiant": "a"
+          },
+          {
+            "identifiant": "b"
+          },
+          {
+            "identifiant": "c"
+          }
+        ]
+      }
+    ]
+  }
+  '''
+# ---
 # name: test_parse_if
   '''
   {

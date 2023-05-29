@@ -92,3 +92,11 @@ def test_return(snapshot):
     """
 
     assert get_out(input) == snapshot
+
+
+def test_function_call(snapshot):
+    input = """
+    fonction1(a, b, c);
+    """
+
+    assert get_out(input) == snapshot
