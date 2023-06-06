@@ -102,7 +102,7 @@ class Entier(AST):
 
 class Booleen(AST):
 
-    def __init__(self, valeur):
+    def __init__(self, valeur: bool):
         self.valeur = valeur
 
     def type(self) -> Type:
@@ -254,8 +254,11 @@ class FunctionArgs(AST):
     def to_json(self) -> JSON:
         return list(map(lambda x: x.to_json(), self.args))
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int):
         return self.args[i]
+
+    def __iter__(self):
+        return iter(self.args)
 
     def append(self, arg: AST):
         self.args.append(arg)

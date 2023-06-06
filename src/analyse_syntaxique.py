@@ -1,3 +1,5 @@
+# type: ignore
+
 from sly import Parser
 from src.analyse_lexicale import FloLexer
 import src.arbre_abstrait as arbre_abstrait
@@ -180,7 +182,7 @@ class FloParser(Parser):
         return p.function
 
 
-def analyse_syntaxique(input) -> arbre_abstrait.Programme:
+def analyse_syntaxique(input: str) -> arbre_abstrait.Programme:
     lexer = FloLexer()
     parser = FloParser()
     return parser.parse(lexer.tokenize(input))
