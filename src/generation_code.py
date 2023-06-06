@@ -100,7 +100,7 @@ def gen_entrypoint(programme: arbre_abstrait.Programme):
 
 def gen_programme(programme: arbre_abstrait.Programme,
                   symbol_table: SymbolTable,
-                  is_main=False):
+                  is_main: bool = False):
 
     funcs = [
         instruction for instruction in programme.instructions
@@ -197,17 +197,24 @@ def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction,
         exit(0)
 
 
-def gen_appel_fonction_user(fonction: arbre_abstrait.AppelFonction,
+def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
                             symbol_table: SymbolTable):
     """
     Affiche le code nasm correspondant à l'appel d'une fonction utilisateur
     """
+
+    f_args = symbol_table.args(fonction_call.name)
+
     # on empile les arguments de la fonction
-    for arg in fonction.args:
+    for i, arg in enumerate(fonction_call.args):
+
+        if i >= len(f_args) or f_args[i].type() != arg.type():
+            raise Exception("type d'argument différent de la fonction")
+
         gen_expression(arg, symbol_table)
 
     # on appelle la fonction
-    nasm_instruction("call", f"_{fonction.name.valeur}", "", "", "")
+    nasm_instruction("call", f"_{fonction_call.name.valeur}", "", "", "")
 
     # on empile la valeur de retour de la fonction
     nasm_instruction("push", "eax", "", "", "")

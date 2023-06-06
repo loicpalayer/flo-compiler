@@ -1,4 +1,5 @@
-from sre_constants import IN
+# type: ignore
+
 import syrupy
 
 from src.analyse_syntaxique import analyse_syntaxique
@@ -20,6 +21,21 @@ def test_function(snapshot, capsys):
     ecrire(f());
     """
     assert get_out(input, capsys) == snapshot
+
+
+def test_invalid_call(snapshot, capsys):
+    input = """
+    entier f() {
+        retourner 3;
+    }
+    ecrire(f(3));
+    """
+
+    try:
+        get_out(input, capsys)
+        assert False
+    except Exception as e:
+        assert e == snapshot
 
 
 def test_invalid1(snapshot, capsys):
