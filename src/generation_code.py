@@ -1,5 +1,5 @@
 import sys
-from typing import List
+from typing import List, Optional
 from src.analyse_syntaxique import analyse_syntaxique
 import src.arbre_abstrait as arbre_abstrait
 from src.symbol_table import SymbolTable
@@ -8,6 +8,8 @@ num_etiquette_courante = -1  #Permet de donner des noms différents à toutes le
 
 afficher_table = False
 afficher_nasm = True
+
+current_function: Optional[arbre_abstrait.Function] = None
 
 
 def check_type(expr: arbre_abstrait.AST, expected: arbre_abstrait.Type):
@@ -131,6 +133,13 @@ def gen_return(return_: arbre_abstrait.Return, symbol_table: SymbolTable):
     Affiche le code nasm correspondant à un return. Met sa valeur dans eax avant de revenir
 à l’appel de la fonction grâce à l’instruction nasm ret
     """
+
+    if current_function is None:
+        raise Exception("return en dehors d'une fonction")
+
+    if current_function.return_type != return_.value.type():
+        raise Exception("return de type différent de la fonction")
+
     gen_expression(return_.value, symbol_table)
     nasm_instruction("pop", "eax", "", "", "")
     nasm_instruction("ret", "", "", "", "retourne à l'appel de la fonction")
@@ -210,8 +219,13 @@ def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
     """
     printift(fonction)
 
+    global current_function
+    current_function = fonction
+
     printifm(f"_{fonction.name.valeur}:")
     gen_listeInstructions(fonction.body.instructions, symbol_table)
+
+    current_function = None
 
 
 def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):

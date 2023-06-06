@@ -21,3 +21,12 @@
   
   '''
 # ---
+# name: test_invalid1
+  Exception("return en dehors d'une fonction")
+# ---
+# name: test_invalid2
+  Exception('return de type différent de la fonction')
+# ---
+# name: test_invalid3
+  Exception('return de type différent de la fonction')
+# ---
