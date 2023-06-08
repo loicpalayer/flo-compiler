@@ -193,8 +193,7 @@ def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction,
     elif fonction.name in symbol_table:
         gen_appel_fonction_user(fonction, symbol_table)
     else:
-        print("fonction inconnue", fonction.name)
-        exit(0)
+        raise Exception("fonction inconnue", fonction.name)
 
 
 def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
@@ -251,8 +250,7 @@ def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
     elif type(expression) == arbre_abstrait.AppelFonction:
         gen_appel_fonction(expression, symbol_table)
     else:
-        print("type d'expression inconnu", type(expression))
-        exit(0)
+        raise Exception("type d'expression inconnu")
 
 
 def gen_operation(operation: arbre_abstrait.Operation,
@@ -322,8 +320,7 @@ def gen_operation(operation: arbre_abstrait.Operation,
         gen_comparison(operation)
 
     else:
-        print("type d'opération inconnu", op)
-        exit(0)
+        raise Exception("type d'opération inconnu", op)
 
     target = "edx" if op == "%" else "eax"
 
@@ -346,8 +343,7 @@ def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire,
         check_type(operation, arbre_abstrait.Type.BOOLEEN)
         nasm_instruction("xor", "eax", "1", "", "effectue l'opération not eax")
     else:
-        print("type d'opération unaire inconnu")
-        exit(0)
+        raise Exception("type d'opération unaire inconnu")
 
     nasm_instruction("push", "eax", "", "", "empile le résultat")
 
@@ -374,33 +370,4 @@ def gen_comparison(expr: arbre_abstrait.Operation):
     elif expr.op == '!=':
         nasm_instruction("setne", "al", "", "", "met al à 1 si eax != ebx")
     else:
-        print("type de comparaison inconnu")
-        exit(0)
-
-
-def main():
-    global afficher_nasm
-    global afficher_tableSymboles
-
-    afficher_nasm = True
-    if len(sys.argv) < 3 or sys.argv[1] not in ["-nasm", "-table"]:
-        print(
-            "usage: python3 generation_code.py -nasm|-table NOM_FICHIER_SOURCE.flo"
-        )
-        exit(0)
-    if sys.argv[1] == "-nasm":
-        afficher_nasm = True
-    if sys.argv[1] == "-table":
-        afficher_tableSymboles = True
-
-    with open(sys.argv[2], "r") as f:
-        data = f.read()
-        try:
-            arbre = analyse_syntaxique(data)
-            gen_entrypoint(arbre)
-        except EOFError:
-            exit()
-
-
-if __name__ == "__main__":
-    main()
+        raise Exception("type de comparaison inconnu")
