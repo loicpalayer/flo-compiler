@@ -39,7 +39,7 @@ def check_bad(file_name):
 		exit(1)
 		
 	try:
-		subprocess.check_output(command)
+		subprocess.check_output(command, stderr=subprocess.STDOUT)
 		print(file_name+":Faux, ne devrait pas compiler et compile")
 	except Exception as e:
 		print(file_name+":Ok")
