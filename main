@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""
+Wrapper so that the teacher's juge.py works
+"""
+
+import main
+import sys
+
+# expected args: [program, -n, file]
+args = ['main.py', sys.argv[2]]
+
+main.main(args)
