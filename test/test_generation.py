@@ -96,3 +96,20 @@ def test_affectation(snapshot, capsys):
     f(5);
     """
     assert get_out(input, capsys) == snapshot
+
+
+def test_if(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        si (e > 5) {
+            ecrire(e);
+        }
+        sinon {
+            ecrire(5);
+            ecrire(6);
+        }
+        retourner 1;
+    }
+    f(5);
+    """
+    assert get_out(input, capsys) == snapshot

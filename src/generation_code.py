@@ -1,5 +1,6 @@
 from typing import List, Optional
 import src.arbre_abstrait as arbre_abstrait
+from src.arbre_abstrait import Entier, Type
 from src.symbol_table import SymbolTable, Variable
 
 num_etiquette_courante = -1  #Permet de donner des noms différents à toutes les étiquettes (en les appelant e0, e1,e2,...)
@@ -10,14 +11,15 @@ afficher_nasm = True
 current_function: Optional[arbre_abstrait.Function] = None
 
 
-def check_type(expr: arbre_abstrait.AST, expected: arbre_abstrait.Type):
+def check_type(expected: Type, *args: Type):
     """
     Fonction locale, permet de vérifier que le type d'une expression est bien celui attendu.
     """
-    if expr.type() != expected:
-        raise Exception(
-            f"Erreur de type: {expr} est de type {expr.type()} au lieu de {expected}"
-        )
+    for arg in args:
+        if arg != expected:
+            raise Exception(
+                f"Le type de l'expression est {arg} alors que le type attendu est {expected.name}"
+            )
 
 
 def printifm(*args, **kwargs):
@@ -152,14 +154,53 @@ def gen_instruction(instruction: arbre_abstrait.AST,
         gen_function(instruction, symbol_table)
     elif isinstance(instruction, arbre_abstrait.Return):
         gen_return(instruction, symbol_table)
+    elif isinstance(instruction, arbre_abstrait.If):
+        gen_if(instruction, symbol_table)
+    elif isinstance(instruction, arbre_abstrait.Declaration):
+        gen_declaration(instruction, symbol_table)
     else:
-        gen_expression(instruction, symbol_table)
+        ty_expr = gen_expression(instruction, symbol_table)
+        if ty_expr != Type.VIDE:
+            nasm_instruction("pop", "eax", "", "", "")
+
+
+def gen_declaration(declaration: arbre_abstrait.Declaration,
+                    symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à une déclaration
+    """
+
+    # TODO
+
+
+def gen_if(if_: arbre_abstrait.If, symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à un if
+    """
+    ty_cond = gen_expression(if_.condition, symbol_table)
+    check_type(Type.BOOLEEN, ty_cond)
+    nasm_instruction("pop", "eax", "", "", "")
+    nasm_instruction("cmp", "eax", "0", "", "")
+    if if_.orelse is not None:
+        etiq_else = nasm_nouvelle_etiquette()
+        nasm_instruction("je", etiq_else, "", "", "")
+        gen_listeInstructions(if_.body.instructions, symbol_table)
+        etiq_fin = nasm_nouvelle_etiquette()
+        nasm_instruction("jmp", etiq_fin, "", "", "")
+        nasm_instruction(etiq_else + ":", "", "", "", "")
+        gen_listeInstructions(if_.orelse.instructions, symbol_table)
+        nasm_instruction(etiq_fin + ":", "", "", "", "")
+    else:
+        etig_fin = nasm_nouvelle_etiquette()
+        nasm_instruction("je", etig_fin, "", "", "")
+        gen_listeInstructions(if_.body.instructions, symbol_table)
+        nasm_instruction(etig_fin + ":", "", "", "", "")
 
 
 class Builtins:
 
     @staticmethod
-    def ecrire(arg: arbre_abstrait.AST, symbol_table: SymbolTable):
+    def ecrire(arg: arbre_abstrait.AST, symbol_table: SymbolTable) -> Type:
         """
         Affiche le code nasm correspondant au fait d'envoyer la valeur entière d'une expression sur la sortie standard
         """
@@ -169,9 +210,10 @@ class Builtins:
         nasm_instruction("pop", "eax", "", "", "")
         # on envoie la valeur d'eax sur la sortie standard
         nasm_instruction("call", "iprintLF", "", "", "")
+        return Type.VIDE
 
     @staticmethod
-    def lire(symbol_table: SymbolTable):
+    def lire(symbol_table: SymbolTable) -> Type:
         """
         Affiche le code nasm correspondant au fait de lire un entier sur l'entrée standard et de le mettre dans une variable
         """
@@ -179,23 +221,24 @@ class Builtins:
         nasm_instruction("call", "readline", "", "", "")
         nasm_instruction("call", "atoi", "", "", "")
         nasm_instruction("push", "eax", "", "", "")
+        return Type.ENTIER
 
 
 def gen_appel_fonction(fonction: arbre_abstrait.AppelFonction,
-                       symbol_table: SymbolTable):
+                       symbol_table: SymbolTable) -> Type:
     """
     Affiche le code nasm correspondant à l'appel d'une fonction
     """
     if fct := getattr(Builtins, fonction.name.valeur, None):
-        fct(*fonction.args, symbol_table=symbol_table)
+        return fct(*fonction.args, symbol_table=symbol_table)
     elif fonction.name in symbol_table:
-        gen_appel_fonction_user(fonction, symbol_table)
+        return gen_appel_fonction_user(fonction, symbol_table)
     else:
-        raise Exception("fonction inconnue", fonction.name)
+        raise Exception("fonction inconnue", fonction.name.to_json())
 
 
 def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
-                            symbol_table: SymbolTable):
+                            symbol_table: SymbolTable) -> Type:
     """
     Affiche le code nasm correspondant à l'appel d'une fonction utilisateur
     """
@@ -226,6 +269,8 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
     # on empile la valeur de retour de la fonction
     nasm_instruction("push", "eax", "", "", "")
 
+    return symbol_table.type(fonction_call.name)
+
 
 def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
     """
@@ -250,7 +295,8 @@ def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
         symbol_table.remove(arg.name)
 
 
-def gen_variable(id: arbre_abstrait.Identifiant, symbol_table: SymbolTable):
+def gen_variable(id: arbre_abstrait.Identifiant,
+                 symbol_table: SymbolTable) -> Type:
     """
     Affiche le code nasm correspondant à l'accès à une variable
     """
@@ -261,59 +307,65 @@ def gen_variable(id: arbre_abstrait.Identifiant, symbol_table: SymbolTable):
 
     nasm_instruction("mov", "eax", f"[ebp-{var.offset}]", "", "")
     nasm_instruction("push", "eax", "", "", "")
+    return var.type
 
 
-def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
+def gen_expression(expression: arbre_abstrait.AST,
+                   symbol_table: SymbolTable) -> arbre_abstrait.Type:
     """
     Affiche le code nasm pour calculer et empiler la valeur d'une expression
     """
     if type(expression) == arbre_abstrait.Operation:
         # on calcule et empile la valeur de l'opération
-        gen_operation(expression, symbol_table)
+        return gen_operation(expression, symbol_table)
     elif type(expression) == arbre_abstrait.OperationUnaire:
-        gen_operation_unaire(expression, symbol_table)
-    elif type(expression) == arbre_abstrait.Entier or type(
-            expression) == arbre_abstrait.Booleen:
+        return gen_operation_unaire(expression, symbol_table)
+    elif type(expression) == arbre_abstrait.Entier:
         # on met sur la pile la valeur entière
         nasm_instruction("push", str(int(expression.valeur)), "", "", "")
+        return arbre_abstrait.Type.ENTIER
+    elif type(expression) == arbre_abstrait.Booleen:
+        # on met sur la pile la valeur booléenne (0 ou 1)
+        nasm_instruction("push", str(int(expression.valeur)), "", "", "")
+        return arbre_abstrait.Type.BOOLEEN
     elif type(expression) == arbre_abstrait.AppelFonction:
-        gen_appel_fonction(expression, symbol_table)
-    elif type(expression) == arbre_abstrait.Declaration:
-        pass  # on ne fait rien
+        return gen_appel_fonction(expression, symbol_table)
     elif type(expression) == arbre_abstrait.Identifiant:
-        gen_variable(expression, symbol_table)
+        return gen_variable(expression, symbol_table)
     elif type(expression) == arbre_abstrait.Assignment:
-        gen_assignment(expression, symbol_table)
+        return gen_assignment(expression, symbol_table)
     else:
-        raise Exception("type d'expression inconnu: " + str(type(expression)))
+        raise Exception("type d'expression inconnu: " + str(type(expression)) +
+                        ", " + str(expression.to_json()))
 
 
 def gen_assignment(assignment: arbre_abstrait.Assignment,
-                   symbol_table: SymbolTable):
+                   symbol_table: SymbolTable) -> Type:
     """
     Affiche le code nasm pour l'assignation d'une variable
     """
-    gen_expression(assignment.value, symbol_table)
+    type = gen_expression(assignment.value, symbol_table)
     var = symbol_table.get(assignment.name)
     if not isinstance(var, Variable):
         raise Exception("identifiant inconnu", assignment.name)
 
     nasm_instruction("pop", "eax", "", "", "")
     nasm_instruction("mov", f"[ebp-{var.offset}]", "eax", "", "")
+    return Type.VIDE
 
 
 def gen_operation(operation: arbre_abstrait.Operation,
-                  symbol_table: SymbolTable):
+                  symbol_table: SymbolTable) -> Type:
     """
     Affiche le code nasm pour calculer l'opération et la mettre en haut de la pile
     """
 
     op = operation.op
 
-    gen_expression(operation.lhs,
-                   symbol_table)  # on calcule et empile la valeur de exp1
-    gen_expression(operation.rhs,
-                   symbol_table)  # on calcule et empile la valeur de exp2
+    type_lhs = gen_expression(
+        operation.lhs, symbol_table)  # on calcule et empile la valeur de exp1
+    type_rhs = gen_expression(
+        operation.rhs, symbol_table)  # on calcule et empile la valeur de exp2
 
     nasm_instruction("pop", "ebx", "", "",
                      "dépile la seconde operande dans ebx")
@@ -332,52 +384,57 @@ def gen_operation(operation: arbre_abstrait.Operation,
     # Un dictionnaire qui associe à chaque opérateur sa fonction nasm
     # Voir: https://www.bencode.net/blob/nasmcheatsheet.pdf
     if op in ['+', '-']:
-        check_type(operation, arbre_abstrait.Type.ENTIER)
+        check_type(Type.ENTIER, type_lhs, type_rhs)
 
         nasm_instruction(
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
+        res_type = Type.ENTIER
     elif op == '*':
-        check_type(operation, arbre_abstrait.Type.ENTIER)
+        check_type(Type.ENTIER, type_lhs, type_rhs)
 
         nasm_instruction(
             code[op], "ebx", "", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
+        res_type = Type.ENTIER
     elif op == '/':
-        check_type(operation, arbre_abstrait.Type.ENTIER)
+        check_type(Type.ENTIER, type_lhs, type_rhs)
 
         nasm_instruction("mov", "edx", "0", "", "met edx à 0")
 
         nasm_instruction(
             code[op], "ebx", "", "", "effectue l'opération edx:eax" + op +
             "ebx et met le résultat dans eax")
+        res_type = Type.ENTIER
     elif op == '%':
-        check_type(operation, arbre_abstrait.Type.ENTIER)
+        check_type(Type.ENTIER, type_lhs, type_rhs)
 
         nasm_instruction("mov", "edx", "0", "", "met edx à 0")
         nasm_instruction(
             "idiv", "ebx", "", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans edx")
+        res_type = Type.ENTIER
     elif op in ["ou", "et"]:
-        check_type(operation, arbre_abstrait.Type.BOOLEEN)
+        check_type(arbre_abstrait.Type.BOOLEEN, type_lhs, type_rhs)
 
         nasm_instruction(
             code[op], "eax", "ebx", "", "effectue l'opération eax" + op +
             "ebx et met le résultat dans eax")
-
+        res_type = Type.BOOLEEN
     elif op in ["<", "<=", ">", ">=", "==", "!="]:
-        gen_comparison(operation)
-
+        gen_comparison(operation, type_lhs, type_rhs)
+        res_type = Type.BOOLEEN
     else:
         raise Exception("type d'opération inconnu", op)
 
     target = "edx" if op == "%" else "eax"
 
     nasm_instruction("push", target, "", "", "empile le résultat")
+    return res_type
 
 
 def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire,
-                         symbol_table: SymbolTable):
+                         symbol_table: SymbolTable) -> Type:
     op = operation.op
 
     gen_expression(operation.exp,
@@ -386,23 +443,27 @@ def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire,
                      "dépile la première operande dans eax")
 
     if op == '-':
-        check_type(operation, arbre_abstrait.Type.ENTIER)
+        check_type(Type.ENTIER, operation.exp)
         nasm_instruction("neg", "eax", "", "", "effectue l'opération -eax")
+        res_type = Type.ENTIER
     elif op == "non":
-        check_type(operation, arbre_abstrait.Type.BOOLEEN)
+        check_type(Type.BOOLEEN, operation.exp)
         nasm_instruction("xor", "eax", "1", "", "effectue l'opération not eax")
+        res_type = Type.BOOLEEN
     else:
         raise Exception("type d'opération unaire inconnu")
 
     nasm_instruction("push", "eax", "", "", "empile le résultat")
+    return res_type
 
 
-def gen_comparison(expr: arbre_abstrait.Operation):
+def gen_comparison(expr: arbre_abstrait.Operation, lhs_type: Type,
+                   rhs_type: Type):
     """
     Génère le code pour une comparaison
     """
 
-    check_type(expr, arbre_abstrait.Type.ENTIER)
+    check_type(Type.ENTIER, lhs_type, rhs_type)
 
     # On effectue la comparaison
     nasm_instruction("cmp", "eax", "ebx", "", "compare eax et ebx")

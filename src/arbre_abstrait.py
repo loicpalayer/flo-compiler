@@ -11,7 +11,7 @@ class Type(enum.Enum):
     ENTIER = enum.auto()
     BOOLEEN = enum.auto()
     FONCTION = enum.auto()
-    AUTRE = enum.auto()
+    VIDE = enum.auto()
 
     @staticmethod
     def from_str(s: str) -> "Type":
@@ -59,7 +59,10 @@ class Operation(AST):
 
     def type(self) -> Type:
         if self.lhs.type() == self.rhs.type():
+            if self.op in ["<", "<=", ">", ">=", "==", "!="]:
+                return Type.BOOLEEN
             return self.lhs.type()
+        print("op:", self.lhs.to_json(), self.rhs.to_json())
         return Type.INCONNU
 
     def to_json(self) -> JSON:
@@ -153,7 +156,8 @@ class If(AST):
             self.orelse.addInstruction(If(condition, body, None))
 
     def add_else(self, body: Programme):
-        self.orelse.addInstruction(body)
+        for i in body.instructions:
+            self.orelse.addInstruction(i)
 
     def to_json(self) -> JSON:
         return {

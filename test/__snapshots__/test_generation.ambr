@@ -25,6 +25,7 @@
   	add	esp,	4	
   	pop	ebp		
   	push	eax		
+  	pop	eax		
   	mov	eax,	1			 ; 1 est le code de SYS_EXIT
   	int	0x80				 ; exit
   
@@ -72,6 +73,55 @@
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
   _start:
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
+# name: test_if
+  '''
+  %include	"io.asm"
+  section	.bss
+  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
+  v$a:	resd	1
+  section	.text
+  global _start
+  _f:
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	push	5		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	setg	al				 ; met al à 1 si eax > ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e0		
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	pop	eax		
+  	call	iprintLF		
+  	jmp	e1		
+  	e0:			
+  	push	5		
+  	pop	eax		
+  	call	iprintLF		
+  	push	6		
+  	pop	eax		
+  	call	iprintLF		
+  	e1:			
+  	push	1		
+  	pop	eax		
+  	ret					 ; retourne à l'appel de la fonction
+  _start:
+  	push	ebp		
+  	push	5		
+  	call	_f		
+  	add	esp,	4	
+  	pop	ebp		
+  	push	eax		
+  	pop	eax		
   	mov	eax,	1			 ; 1 est le code de SYS_EXIT
   	int	0x80				 ; exit
   

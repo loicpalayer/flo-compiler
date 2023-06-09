@@ -225,14 +225,10 @@
               }
             },
             {
-              "instructions": [
+              "function_name": "ecrire",
+              "args": [
                 {
-                  "function_name": "ecrire",
-                  "args": [
-                    {
-                      "identifiant": "c"
-                    }
-                  ]
+                  "identifiant": "c"
                 }
               ]
             }
