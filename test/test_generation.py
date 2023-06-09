@@ -113,3 +113,120 @@ def test_if(snapshot, capsys):
     f(5);
     """
     assert get_out(input, capsys) == snapshot
+
+
+def test_var_local1(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        entier a = lire();
+        retourner a + e;
+    }
+    f(5);
+    """
+    assert get_out(input, capsys) == snapshot
+
+
+def test_var_local2(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        si (e == 0) {
+            entier a = 5;
+        }
+        si (e == 0) {
+            entier a = 5;
+        }
+        si (e == 0) {
+            entier a = 5;
+        }
+    }
+    f(5);
+    """
+    assert get_out(input, capsys) == snapshot
+
+
+def test_var_local3(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        entier a = lire();
+        si (a > 2) {
+            entier b = a * a;
+            si (b > 3 * a) {
+                entier c = 25;
+            }
+            sinon {
+                entier d = 26;
+            }
+        }
+    }
+    f(5);
+    """
+    assert get_out(input, capsys) == snapshot
+
+
+def test_var_local_invalid1(snapshot, capsys):
+    input = """
+    entier f(booleen b) {
+        si (b) {
+            entier a = lire();
+            ecrire(a);
+        }
+        ecrire(a + 5);
+        retourner 1;
+    }
+    f(Vrai);
+    """
+
+    try:
+        get_out(input, capsys)
+        assert False
+    except Exception as e:
+        assert e == snapshot
+
+
+def test_var_local_invalid2(snapshot, capsys):
+    input = """
+    entier f() {
+        entier a;
+    }
+    entier g() {
+        a = 5;
+    }
+    f();
+    """
+
+    try:
+        get_out(input, capsys)
+        assert False
+    except Exception as e:
+        assert e == snapshot
+
+
+def test_var_local_invalid3(snapshot, capsys):
+    input = """
+    entier f(booleen b) {
+        tantque (b) {
+            entier rep = lire();
+            si (rep > 10) {
+                b = Faux;
+            }
+        }
+        retourner rep;
+    }
+    f(Vrai);
+    """
+
+    try:
+        get_out(input, capsys)
+        assert False
+    except Exception as e:
+        assert e == snapshot
+
+
+def test_var_global(snapshot, capsys):
+    input = """
+    entier f() {
+        retourner 123;
+    }
+    entier a = f();
+    """
+    assert get_out(input, capsys) == snapshot

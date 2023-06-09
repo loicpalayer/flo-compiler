@@ -5,10 +5,11 @@ from src.arbre_abstrait import Declaration, Identifiant, Programme, Type, Functi
 
 class Variable:
 
-    def __init__(self, name: Identifiant, type: Type, address: int):
+    def __init__(self, name: Identifiant, type: Type, offset: int, depth: int):
         self.name = name
         self.type = type
-        self.offset = address
+        self.offset = offset
+        self.depth = depth
 
 
 Symbol = Function | Variable
@@ -41,8 +42,7 @@ class SymbolTable:
         return self._symbols[sym.valeur]
 
     def remove(self, sym: Identifiant):
-        if not sym in self:
-            raise Exception(f"Le symbole {sym.name} n'est pas défini")
+        self.check_presence(sym)
         del self._symbols[sym.valeur]
 
     def type(self, func: Identifiant) -> Type:
@@ -53,9 +53,32 @@ class SymbolTable:
         self.check_presence(func)
         return self._symbols[func.valeur].args
 
-    def memory_size(self, func: Identifiant) -> int:
-        self.check_presence(func)
-        return 4 * len(self.args(func))
+    def memory_size(self, sym: Identifiant) -> int:
+        self.check_presence(sym)
+        func = self.get(sym)
+        return 4 * len(func.args) + func.stack_size
+
+    def memory_size_locals(self, sym: Identifiant) -> int:
+        self.check_presence(sym)
+        func = self.get(sym)
+        return func.stack_size
+
+    def next_address(self) -> int:
+        return max([
+            sym.offset
+            for sym in self._symbols.values() if type(sym) == Variable
+        ],
+                   default=0) + 4
+
+    def end_block(self, depth: int):
+        in_depth = {
+            k: v
+            for k, v in self._symbols.items()
+            if type(v) == Variable and v.depth == depth
+        }
+        for k in in_depth:
+            del self._symbols[k]
+        return in_depth
 
     def __contains__(self, sym: Symbol | Identifiant):
         if isinstance(sym, Identifiant):

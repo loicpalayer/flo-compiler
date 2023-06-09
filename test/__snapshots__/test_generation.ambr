@@ -18,8 +18,9 @@
   	push	5		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
-  _start:
+  __main:
   	push	ebp		
+  	sub	esp,	0	
   	push	5		
   	call	_f		
   	add	esp,	4	
@@ -43,8 +44,9 @@
   	push	3		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
-  _start:
+  __main:
   	push	ebp		
+  	sub	esp,	0	
   	call	_f		
   	add	esp,	0	
   	pop	ebp		
@@ -58,13 +60,6 @@
 # ---
 # name: test_function_with_param
   '''
-  %include	"io.asm"
-  section	.bss
-  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
-  v$a:	resd	1
-  section	.text
-  global _start
-  _f:
   	mov	eax,	[ebp-4]	
   	push	eax		
   	pop	eax		
@@ -72,7 +67,7 @@
   	push	1		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
-  _start:
+  __main:
   	mov	eax,	1			 ; 1 est le code de SYS_EXIT
   	int	0x80				 ; exit
   
@@ -97,25 +92,26 @@
   	push	eax				 ; empile le résultat
   	pop	eax		
   	cmp	eax,	0	
-  	je	e0		
+  	je	e2		
   	mov	eax,	[ebp-4]	
   	push	eax		
   	pop	eax		
   	call	iprintLF		
-  	jmp	e1		
-  	e0:			
+  	jmp	e3		
+  	e2:			
   	push	5		
   	pop	eax		
   	call	iprintLF		
   	push	6		
   	pop	eax		
   	call	iprintLF		
-  	e1:			
+  	e3:			
   	push	1		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
-  _start:
+  __main:
   	push	ebp		
+  	sub	esp,	0	
   	push	5		
   	call	_f		
   	add	esp,	4	
@@ -128,7 +124,7 @@
   '''
 # ---
 # name: test_invalid1
-  Exception("return en dehors d'une fonction")
+  Exception('return de type différent de la fonction')
 # ---
 # name: test_invalid2
   Exception('return de type différent de la fonction')
@@ -138,4 +134,216 @@
 # ---
 # name: test_invalid_call
   Exception("type d'argument différent de la fonction")
+# ---
+# name: test_var_global
+  '''
+  	push	123		
+  	pop	eax		
+  	ret					 ; retourne à l'appel de la fonction
+  __main:
+  	push	ebp		
+  	sub	esp,	0	
+  	call	_f		
+  	add	esp,	0	
+  	pop	ebp		
+  	push	eax		
+  	pop	eax		
+  	mov	[ebp-4],	eax	
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
+# name: test_var_local1
+  '''
+  %include	"io.asm"
+  section	.bss
+  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
+  v$a:	resd	1
+  section	.text
+  global _start
+  _f:
+  	mov	eax,	sinput	
+  	call	readline		
+  	call	atoi		
+  	push	eax		
+  	pop	eax		
+  	mov	[ebp-8],	eax	
+  	mov	eax,	[ebp-8]	
+  	push	eax		
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	add	eax,	ebx			 ; effectue l'opération eax+ebx et met le résultat dans eax
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	ret					 ; retourne à l'appel de la fonction
+  __main:
+  	push	ebp		
+  	sub	esp,	4	
+  	push	5		
+  	call	_f		
+  	add	esp,	8	
+  	pop	ebp		
+  	push	eax		
+  	pop	eax		
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
+# name: test_var_local2
+  '''
+  %include	"io.asm"
+  section	.bss
+  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
+  v$a:	resd	1
+  section	.text
+  global _start
+  _f:
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	push	0		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	sete	al				 ; met al à 1 si eax == ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e7		
+  	push	5		
+  	pop	eax		
+  	mov	[ebp-8],	eax	
+  	e7:			
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	push	0		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	sete	al				 ; met al à 1 si eax == ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e8		
+  	push	5		
+  	pop	eax		
+  	mov	[ebp-8],	eax	
+  	e8:			
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	push	0		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	sete	al				 ; met al à 1 si eax == ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e9		
+  	push	5		
+  	pop	eax		
+  	mov	[ebp-8],	eax	
+  	e9:			
+  __main:
+  	push	ebp		
+  	sub	esp,	12	
+  	push	5		
+  	call	_f		
+  	add	esp,	16	
+  	pop	ebp		
+  	push	eax		
+  	pop	eax		
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
+# name: test_var_local3
+  '''
+  %include	"io.asm"
+  section	.bss
+  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
+  v$a:	resd	1
+  section	.text
+  global _start
+  _f:
+  	mov	eax,	sinput	
+  	call	readline		
+  	call	atoi		
+  	push	eax		
+  	pop	eax		
+  	mov	[ebp-8],	eax	
+  	mov	eax,	[ebp-8]	
+  	push	eax		
+  	push	2		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	setg	al				 ; met al à 1 si eax > ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e13		
+  	mov	eax,	[ebp-8]	
+  	push	eax		
+  	mov	eax,	[ebp-8]	
+  	push	eax		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	imul	ebx				 ; effectue l'opération eax*ebx et met le résultat dans eax
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	mov	[ebp-12],	eax	
+  	mov	eax,	[ebp-12]	
+  	push	eax		
+  	push	3		
+  	mov	eax,	[ebp-8]	
+  	push	eax		
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	imul	ebx				 ; effectue l'opération eax*ebx et met le résultat dans eax
+  	push	eax				 ; empile le résultat
+  	pop	ebx				 ; dépile la seconde operande dans ebx
+  	pop	eax				 ; dépile la permière operande dans eax
+  	cmp	eax,	ebx			 ; compare eax et ebx
+  	setg	al				 ; met al à 1 si eax > ebx
+  	push	eax				 ; empile le résultat
+  	pop	eax		
+  	cmp	eax,	0	
+  	je	e14		
+  	push	25		
+  	pop	eax		
+  	mov	[ebp-16],	eax	
+  	jmp	e15		
+  	e14:			
+  	push	26		
+  	pop	eax		
+  	mov	[ebp-16],	eax	
+  	e15:			
+  	e13:			
+  __main:
+  	push	ebp		
+  	sub	esp,	16	
+  	push	5		
+  	call	_f		
+  	add	esp,	20	
+  	pop	ebp		
+  	push	eax		
+  	pop	eax		
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
+# name: test_var_local_invalid1
+  Exception('Le symbole {\n  "identifiant": "a"\n} n\'est pas défini')
+# ---
+# name: test_var_local_invalid2
+  Exception('Le symbole {\n  "identifiant": "a"\n} n\'est pas défini')
+# ---
+# name: test_var_local_invalid3
+  Exception('Le symbole {\n  "identifiant": "rep"\n} n\'est pas défini')
 # ---

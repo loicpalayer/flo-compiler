@@ -9,6 +9,8 @@ afficher_table = False
 afficher_nasm = True
 
 current_function: Optional[arbre_abstrait.Function] = None
+current_depth: int = 0
+pre_pass = False
 
 
 def check_type(expected: Type, *args: Type):
@@ -109,14 +111,18 @@ def gen_programme(programme: arbre_abstrait.Programme,
     for func in funcs:
         gen_function(func, symbol_table)
 
-    if is_main:
-        printifm('_start:')
+    #if is_main:
+    #    printifm('_start:')
 
     instrs = [
         instruction for instruction in programme.instructions
         if not isinstance(instruction, arbre_abstrait.Function)
     ]
-    gen_listeInstructions(instrs, symbol_table)
+    main_func = arbre_abstrait.Function(arbre_abstrait.Identifiant("_main"),
+                                        [], arbre_abstrait.Programme(instrs),
+                                        Type.VIDE)
+    gen_function(main_func, symbol_table)
+    #gen_listeInstructions(instrs, symbol_table)
 
 
 def gen_listeInstructions(instructions: List[arbre_abstrait.AST],
@@ -124,8 +130,14 @@ def gen_listeInstructions(instructions: List[arbre_abstrait.AST],
     """
     Affiche le code nasm correspondant à une suite d'instructions
     """
+    global current_depth
+    current_depth += 1
     for instruction in instructions:
         gen_instruction(instruction, symbol_table)
+    vars = symbol_table.end_block(current_depth)
+    if not afficher_nasm:
+        current_function.stack_size += 4 * len(vars)
+    current_depth -= 1
 
 
 def gen_return(return_: arbre_abstrait.Return, symbol_table: SymbolTable):
@@ -137,10 +149,11 @@ def gen_return(return_: arbre_abstrait.Return, symbol_table: SymbolTable):
     if current_function is None:
         raise Exception("return en dehors d'une fonction")
 
-    if current_function.return_type != return_.value.type():
+    ty_expr = gen_expression(return_.value, symbol_table)
+
+    if current_function.return_type != ty_expr:
         raise Exception("return de type différent de la fonction")
 
-    gen_expression(return_.value, symbol_table)
     nasm_instruction("pop", "eax", "", "", "")
     nasm_instruction("ret", "", "", "", "retourne à l'appel de la fonction")
 
@@ -156,6 +169,8 @@ def gen_instruction(instruction: arbre_abstrait.AST,
         gen_return(instruction, symbol_table)
     elif isinstance(instruction, arbre_abstrait.If):
         gen_if(instruction, symbol_table)
+    elif isinstance(instruction, arbre_abstrait.While):
+        gen_while(instruction, symbol_table)
     elif isinstance(instruction, arbre_abstrait.Declaration):
         gen_declaration(instruction, symbol_table)
     else:
@@ -170,7 +185,24 @@ def gen_declaration(declaration: arbre_abstrait.Declaration,
     Affiche le code nasm correspondant à une déclaration
     """
 
-    # TODO
+    if current_function is None:
+        raise Exception("declaration en dehors d'une fonction")
+
+    ty_decl = declaration._type
+    if declaration.value is None:
+        if ty_decl == Type.ENTIER:
+            declaration.value = arbre_abstrait.Entier(0)
+        elif ty_decl == Type.BOOLEEN:
+            declaration.value = arbre_abstrait.Booleen(False)
+    ty_val = gen_expression(declaration.value, symbol_table)
+    check_type(ty_decl, ty_val)
+
+    offset = symbol_table.next_address()
+    symbol_table.add(Variable(declaration.name, ty_decl, offset,
+                              current_depth))
+
+    nasm_instruction("pop", "eax", "", "", "")
+    nasm_instruction("mov", f"[ebp-{offset}]", "eax", "", "")
 
 
 def gen_if(if_: arbre_abstrait.If, symbol_table: SymbolTable):
@@ -181,7 +213,7 @@ def gen_if(if_: arbre_abstrait.If, symbol_table: SymbolTable):
     check_type(Type.BOOLEEN, ty_cond)
     nasm_instruction("pop", "eax", "", "", "")
     nasm_instruction("cmp", "eax", "0", "", "")
-    if if_.orelse is not None:
+    if if_.orelse.instructions:
         etiq_else = nasm_nouvelle_etiquette()
         nasm_instruction("je", etiq_else, "", "", "")
         gen_listeInstructions(if_.body.instructions, symbol_table)
@@ -195,6 +227,23 @@ def gen_if(if_: arbre_abstrait.If, symbol_table: SymbolTable):
         nasm_instruction("je", etig_fin, "", "", "")
         gen_listeInstructions(if_.body.instructions, symbol_table)
         nasm_instruction(etig_fin + ":", "", "", "", "")
+
+
+def gen_while(while_: arbre_abstrait.While, symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à un while
+    """
+    etiq_debut = nasm_nouvelle_etiquette()
+    etiq_fin = nasm_nouvelle_etiquette()
+    nasm_instruction(etiq_debut + ":", "", "", "", "")
+    ty_cond = gen_expression(while_.condition, symbol_table)
+    check_type(Type.BOOLEEN, ty_cond)
+    nasm_instruction("pop", "eax", "", "", "")
+    nasm_instruction("cmp", "eax", "0", "", "")
+    nasm_instruction("je", etiq_fin, "", "", "")
+    gen_listeInstructions(while_.body.instructions, symbol_table)
+    nasm_instruction("jmp", etiq_debut, "", "", "")
+    nasm_instruction(etiq_fin + ":", "", "", "", "")
 
 
 class Builtins:
@@ -248,13 +297,16 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
     # on empile la valeur de ebp avant de la changer (ancien esp-4) (ou -8).
     nasm_instruction("push", "ebp", "", "", "")
 
+    nasm_instruction("sub", "esp",
+                     str(symbol_table.memory_size_locals(fonction_call.name)),
+                     "", "")
+
     # on empile les arguments de la fonction
     for i, arg in enumerate(fonction_call.args):
-
-        if i >= len(f_args) or f_args[i].type() != arg.type():
-            raise Exception("type d'argument différent de la fonction")
-
-        gen_expression(arg, symbol_table)
+        ty_arg = gen_expression(arg, symbol_table)
+        if i >= len(f_args) or f_args[i].type() != ty_arg:
+            raise Exception("type d'argument différent de la fonction: ",
+                            ty_arg, f_args[i].to_json())
 
     # on appelle la fonction
     nasm_instruction("call", f"_{fonction_call.name.valeur}", "", "", "")
@@ -278,15 +330,19 @@ def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
     """
     printift(fonction)
 
-    global current_function
+    global current_function, afficher_nasm
     current_function = fonction
 
     printifm(f"_{fonction.name.valeur}:")
 
     # on ajoute les arguments de la fonction dans la table des symboles
     for i, arg in enumerate(fonction.args):
-        symbol_table.add(Variable(arg.name, arg.type(), i * 4 + 4))
+        symbol_table.add(
+            Variable(arg.name, arg.type(), i * 4 + 4, current_depth))
 
+    afficher_nasm = False
+    gen_listeInstructions(fonction.body.instructions, symbol_table)
+    afficher_nasm = True
     gen_listeInstructions(fonction.body.instructions, symbol_table)
 
     current_function = None
@@ -437,17 +493,17 @@ def gen_operation_unaire(operation: arbre_abstrait.OperationUnaire,
                          symbol_table: SymbolTable) -> Type:
     op = operation.op
 
-    gen_expression(operation.exp,
-                   symbol_table)  # on calcule et empile la valeur de exp
+    ty_expr = gen_expression(
+        operation.exp, symbol_table)  # on calcule et empile la valeur de exp
     nasm_instruction("pop", "eax", "", "",
                      "dépile la première operande dans eax")
 
     if op == '-':
-        check_type(Type.ENTIER, operation.exp)
+        check_type(Type.ENTIER, ty_expr)
         nasm_instruction("neg", "eax", "", "", "effectue l'opération -eax")
         res_type = Type.ENTIER
     elif op == "non":
-        check_type(Type.BOOLEEN, operation.exp)
+        check_type(Type.BOOLEEN, ty_expr)
         nasm_instruction("xor", "eax", "1", "", "effectue l'opération not eax")
         res_type = Type.BOOLEEN
     else:

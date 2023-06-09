@@ -41,6 +41,7 @@ class Programme(AST):
         self.instructions = instructions
 
     def type(self) -> Type:
+        raise NotImplementedError("Programme has no type")
         return Type.AUTRE
 
     def to_json(self) -> JSON:
@@ -234,6 +235,7 @@ class Function(AST):
         self.args = args
         self.body = body
         self.return_type = return_type
+        self.stack_size = 0
 
     def type(self) -> Type:
         return Type.FONCTION
@@ -243,7 +245,8 @@ class Function(AST):
             "name": self.name.to_json(),
             "args": [a.to_json() for a in self.args],
             "body": self.body.to_json(),
-            "return_type": self.return_type.name
+            "return_type": self.return_type.name,
+            "stack_size": self.stack_size
         }
 
 

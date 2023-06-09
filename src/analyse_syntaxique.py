@@ -6,6 +6,23 @@ import src.arbre_abstrait as arbre_abstrait
 
 
 class FloParser(Parser):
+
+    def error(self, token):
+        '''
+        Default error handling function.  This may be subclassed.
+        '''
+        if token:
+            lineno = getattr(token, 'lineno', 0)
+            if lineno:
+                print(
+                    f'sly: Syntax error at line {lineno}, token={token.type}\n'
+                )
+            else:
+                print(f'sly: Syntax error, token={token.type}')
+        else:
+            print('sly: Parse error in input. EOF\n')
+        print(list(self.symstack))
+
     # On récupère la liste des lexèmes de l'analyse lexicale
     tokens = FloLexer.tokens
 

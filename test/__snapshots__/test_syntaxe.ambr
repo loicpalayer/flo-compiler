@@ -113,7 +113,8 @@
             }
           ]
         },
-        "return_type": "ENTIER"
+        "return_type": "ENTIER",
+        "stack_size": 0
       },
       {
         "name": {
@@ -129,7 +130,8 @@
             }
           ]
         },
-        "return_type": "BOOLEEN"
+        "return_type": "BOOLEEN",
+        "stack_size": 0
       },
       {
         "function_name": "fonction1",
