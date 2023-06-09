@@ -111,6 +111,10 @@ class FloParser(Parser):
         p.si.add_elif(p.expr, p.prog)
         return p.si
 
+    @_('si')
+    def cond(self, p):
+        return p.si
+
     @_('si SINON "{" prog "}"')
     def cond(self, p):
         p.si.add_else(p.prog)
