@@ -1,5 +1,3 @@
-# type: ignore
-
 import syrupy
 
 from src.analyse_syntaxique import analyse_syntaxique
@@ -84,5 +82,17 @@ def test_function_with_param(snapshot, capsys):
         ecrire(e);
         retourner 1;
     }
+    """
+    assert get_out(input, capsys) == snapshot
+
+
+def test_affectation(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        e = 7;
+        ecrire(e);
+        retourner 5;
+    }
+    f(5);
     """
     assert get_out(input, capsys) == snapshot

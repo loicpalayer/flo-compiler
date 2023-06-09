@@ -1,4 +1,35 @@
 # serializer version: 1
+# name: test_affectation
+  '''
+  %include	"io.asm"
+  section	.bss
+  sinput:	resb	255	;reserve a 255 byte space in memory for the users input string
+  v$a:	resd	1
+  section	.text
+  global _start
+  _f:
+  	push	7		
+  	pop	eax		
+  	mov	[ebp-4],	eax	
+  	mov	eax,	[ebp-4]	
+  	push	eax		
+  	pop	eax		
+  	call	iprintLF		
+  	push	5		
+  	pop	eax		
+  	ret					 ; retourne à l'appel de la fonction
+  _start:
+  	push	ebp		
+  	push	5		
+  	call	_f		
+  	add	esp,	4	
+  	pop	ebp		
+  	push	eax		
+  	mov	eax,	1			 ; 1 est le code de SYS_EXIT
+  	int	0x80				 ; exit
+  
+  '''
+# ---
 # name: test_function
   '''
   %include	"io.asm"

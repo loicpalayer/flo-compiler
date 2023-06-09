@@ -282,8 +282,24 @@ def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
         pass  # on ne fait rien
     elif type(expression) == arbre_abstrait.Identifiant:
         gen_variable(expression, symbol_table)
+    elif type(expression) == arbre_abstrait.Assignment:
+        gen_assignment(expression, symbol_table)
     else:
-        raise Exception("type d'expression inconnu")
+        raise Exception("type d'expression inconnu: " + str(type(expression)))
+
+
+def gen_assignment(assignment: arbre_abstrait.Assignment,
+                   symbol_table: SymbolTable):
+    """
+    Affiche le code nasm pour l'assignation d'une variable
+    """
+    gen_expression(assignment.value, symbol_table)
+    var = symbol_table.get(assignment.name)
+    if not isinstance(var, Variable):
+        raise Exception("identifiant inconnu", assignment.name)
+
+    nasm_instruction("pop", "eax", "", "", "")
+    nasm_instruction("mov", f"[ebp-{var.offset}]", "eax", "", "")
 
 
 def gen_operation(operation: arbre_abstrait.Operation,
