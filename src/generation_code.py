@@ -1,8 +1,6 @@
-import sys
 from typing import List, Optional
-from src.analyse_syntaxique import analyse_syntaxique
 import src.arbre_abstrait as arbre_abstrait
-from src.symbol_table import SymbolTable
+from src.symbol_table import SymbolTable, Variable
 
 num_etiquette_courante = -1  #Permet de donner des noms différents à toutes les étiquettes (en les appelant e0, e1,e2,...)
 
@@ -204,6 +202,9 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
 
     f_args = symbol_table.args(fonction_call.name)
 
+    # on empile la valeur de ebp avant de la changer (ancien esp-4) (ou -8).
+    nasm_instruction("push", "ebp", "", "", "")
+
     # on empile les arguments de la fonction
     for i, arg in enumerate(fonction_call.args):
 
@@ -214,6 +215,13 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
 
     # on appelle la fonction
     nasm_instruction("call", f"_{fonction_call.name.valeur}", "", "", "")
+
+    # on désalloue la mémoire de la fonction (en déplaçant esp)
+    nasm_instruction("add", "esp",
+                     str(symbol_table.memory_size(fonction_call.name)), "", "")
+
+    # on dépile la valeur de ebp avant de la changer (ancien esp+4) (ou +8).
+    nasm_instruction("pop", "ebp", "", "", "")
 
     # on empile la valeur de retour de la fonction
     nasm_instruction("push", "eax", "", "", "")
@@ -229,9 +237,30 @@ def gen_function(fonction: arbre_abstrait.Function, symbol_table: SymbolTable):
     current_function = fonction
 
     printifm(f"_{fonction.name.valeur}:")
+
+    # on ajoute les arguments de la fonction dans la table des symboles
+    for i, arg in enumerate(fonction.args):
+        symbol_table.add(Variable(arg.name, arg.type(), i * 4 + 4))
+
     gen_listeInstructions(fonction.body.instructions, symbol_table)
 
     current_function = None
+    # on supprime les arguments de la fonction de la table des symboles
+    for arg in fonction.args:
+        symbol_table.remove(arg.name)
+
+
+def gen_variable(id: arbre_abstrait.Identifiant, symbol_table: SymbolTable):
+    """
+    Affiche le code nasm correspondant à l'accès à une variable
+    """
+
+    var = symbol_table.get(id)
+    if not isinstance(var, Variable):
+        raise Exception("identifiant inconnu", id)
+
+    nasm_instruction("mov", "eax", f"[ebp-{var.offset}]", "", "")
+    nasm_instruction("push", "eax", "", "", "")
 
 
 def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
@@ -249,6 +278,10 @@ def gen_expression(expression: arbre_abstrait.AST, symbol_table: SymbolTable):
         nasm_instruction("push", str(int(expression.valeur)), "", "", "")
     elif type(expression) == arbre_abstrait.AppelFonction:
         gen_appel_fonction(expression, symbol_table)
+    elif type(expression) == arbre_abstrait.Declaration:
+        pass  # on ne fait rien
+    elif type(expression) == arbre_abstrait.Identifiant:
+        gen_variable(expression, symbol_table)
     else:
         raise Exception("type d'expression inconnu")
 

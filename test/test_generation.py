@@ -76,3 +76,13 @@ def test_invalid3(snapshot, capsys):
         assert False
     except Exception as e:
         assert e == snapshot
+
+
+def test_function_with_param(snapshot, capsys):
+    input = """
+    entier f(entier e) {
+        ecrire(e);
+        retourner 1;
+    }
+    """
+    assert get_out(input, capsys) == snapshot
