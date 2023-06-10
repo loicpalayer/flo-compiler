@@ -298,6 +298,9 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
     # on empile la valeur de ebp avant de la changer (ancien esp-4) (ou -8).
     nasm_instruction("push", "ebp", "", "", "")
 
+    # on déplace ebp pour qu'il pointe sur l'ancien esp
+    nasm_instruction("mov", "ebp", "esp", "", "")
+
     nasm_instruction("sub", "esp",
                      str(symbol_table.memory_size_locals(fonction_call.name)),
                      "", "")
