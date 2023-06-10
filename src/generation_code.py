@@ -413,6 +413,8 @@ def gen_assignment(assignment: arbre_abstrait.Assignment,
     if not isinstance(var, Variable):
         raise Exception("identifiant inconnu", assignment.name)
 
+    check_type(type, var.type)
+
     nasm_instruction("pop", "eax", "", "", "")
     nasm_instruction("mov", f"[ebp-{var.offset}]", "eax", "", "")
     return Type.VIDE
