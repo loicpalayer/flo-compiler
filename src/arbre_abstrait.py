@@ -157,8 +157,7 @@ class If(AST):
             self.orelse.addInstruction(If(condition, body, None))
 
     def add_else(self, body: Programme):
-        for i in body.instructions:
-            self.orelse.addInstruction(i)
+        self.add_elif(Booleen(True), body)
 
     def to_json(self) -> JSON:
         return {
