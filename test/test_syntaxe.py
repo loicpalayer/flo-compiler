@@ -33,10 +33,10 @@ def test_parse_if(snapshot):
     si (a) {
         ecrire(a);
     }
-    sinonsi (b) {
+    sinon si (b) {
         ecrire(b);
     }
-    sinonsi (c) {
+    sinon si (c) {
         ecrire(c);
         ecrire(d);
     }
@@ -57,7 +57,7 @@ def test_invalid_parse_if():
     sinon {
         ecrire(d);
     }
-    sinonsi (b) {
+    sinon si (b) {
         ecrire(b);
     }
     """,

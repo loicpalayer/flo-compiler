@@ -123,7 +123,7 @@ class FloParser(Parser):
     def si(self, p):
         return arbre_abstrait.If(p.expr, p.prog, None)
 
-    @_('si SINONSI "(" expr ")" "{" prog "}"')
+    @_('si SINON SI "(" expr ")" "{" prog "}"')
     def si(self, p):
         p.si.add_elif(p.expr, p.prog)
         return p.si
