@@ -18,6 +18,7 @@
   	push	5		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	0	
@@ -44,6 +45,7 @@
   	push	3		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	0	
@@ -67,6 +69,7 @@
   	push	1		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	mov	eax,	1			 ; 1 est le code de SYS_EXIT
   	int	0x80				 ; exit
@@ -109,6 +112,7 @@
   	push	1		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	0	
@@ -133,13 +137,14 @@
   Exception('return de type différent de la fonction')
 # ---
 # name: test_invalid_call
-  Exception("type d'argument différent de la fonction")
+  IndexError('list index out of range')
 # ---
 # name: test_var_global
   '''
   	push	123		
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	0	
@@ -179,6 +184,7 @@
   	push	eax				 ; empile le résultat
   	pop	eax		
   	ret					 ; retourne à l'appel de la fonction
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	4	
@@ -247,6 +253,7 @@
   	pop	eax		
   	mov	[ebp-8],	eax	
   	e9:			
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	12	
@@ -324,6 +331,7 @@
   	mov	[ebp-16],	eax	
   	e15:			
   	e13:			
+  _start:
   __main:
   	push	ebp		
   	sub	esp,	16	

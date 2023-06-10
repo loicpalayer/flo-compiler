@@ -111,8 +111,8 @@ def gen_programme(programme: arbre_abstrait.Programme,
     for func in funcs:
         gen_function(func, symbol_table)
 
-    #if is_main:
-    #    printifm('_start:')
+    if is_main:
+        printifm('_start:')
 
     instrs = [
         instruction for instruction in programme.instructions
