@@ -91,39 +91,43 @@ def gen_entrypoint(programme: arbre_abstrait.Programme):
     printifm('section\t.text')
     printifm('global _start')
 
-    symbol_table = SymbolTable.from_program(programme)
-    printift(symbol_table)
+    # Make outside instructions part of a start function to calculate stack size easily
+    main_func_instrs = [
+        instruction for instruction in programme.instructions
+        if not isinstance(instruction, arbre_abstrait.Function)
+    ]
 
-    gen_programme(programme, symbol_table, is_main=True)
+    main_func_instrs.append(arbre_abstrait.Return(Entier(0)))
 
-    nasm_instruction("mov", "eax", "1", "", "1 est le code de SYS_EXIT")
-    nasm_instruction("mov", "ebx", "0", "", "0 est le code de retour")
-    nasm_instruction("int", "0x80", "", "", "exit")
-
-
-def gen_programme(programme: arbre_abstrait.Programme,
-                  symbol_table: SymbolTable,
-                  is_main: bool = False):
+    main_func = arbre_abstrait.Function(
+        arbre_abstrait.Identifiant("_main"), [],
+        arbre_abstrait.Programme(main_func_instrs), Type.ENTIER)
 
     funcs = [
         instruction for instruction in programme.instructions
         if isinstance(instruction, arbre_abstrait.Function)
     ]
+
+    symbol_table = SymbolTable.from_program(programme)
+    symbol_table.add(main_func)
+    printift(symbol_table)
+
+    printifm("_exit:")
+    nasm_instruction("mov", "eax", "1", "", "1 est le code de SYS_EXIT")
+    nasm_instruction("mov", "ebx", "0", "", "0 est le code de retour")
+    nasm_instruction("int", "0x80", "", "", "exit")
+
     for func in funcs:
         gen_function(func, symbol_table)
 
-    if is_main:
-        printifm('_start:')
-
-    instrs = [
-        instruction for instruction in programme.instructions
-        if not isinstance(instruction, arbre_abstrait.Function)
-    ]
-    main_func = arbre_abstrait.Function(arbre_abstrait.Identifiant("_main"),
-                                        [], arbre_abstrait.Programme(instrs),
-                                        Type.VIDE)
     gen_function(main_func, symbol_table)
-    #gen_listeInstructions(instrs, symbol_table)
+
+    printifm("_start:")
+    call = arbre_abstrait.AppelFonction(arbre_abstrait.Identifiant("_main"),
+                                        [])
+    gen_appel_fonction_user(call, symbol_table)
+
+    printifm("jmp _exit")
 
 
 def gen_listeInstructions(instructions: List[arbre_abstrait.AST],
