@@ -97,7 +97,7 @@ def gen_entrypoint(programme: arbre_abstrait.Programme):
         if not isinstance(instruction, arbre_abstrait.Function)
     ]
 
-    main_func_instrs.append(arbre_abstrait.Return(Entier(0)))
+    #main_func_instrs.append(arbre_abstrait.Return(Entier(0)))
 
     main_func = arbre_abstrait.Function(
         arbre_abstrait.Identifiant("_main"), [],
@@ -121,10 +121,12 @@ def gen_entrypoint(programme: arbre_abstrait.Programme):
         gen_function(func, symbol_table)
 
     gen_function(main_func, symbol_table)
+    nasm_instruction("mov", "eax", "0", "", "0 est le code de retour")
+    nasm_instruction("ret")
 
     printifm("_start:")
     call = arbre_abstrait.AppelFonction(arbre_abstrait.Identifiant("_main"),
-                                        [])
+                                        arbre_abstrait.FunctionArgs([]))
     gen_appel_fonction_user(call, symbol_table)
 
     printifm("jmp _exit")
@@ -151,7 +153,7 @@ def gen_return(return_: arbre_abstrait.Return, symbol_table: SymbolTable):
 à l’appel de la fonction grâce à l’instruction nasm ret
     """
 
-    if current_function is None:
+    if current_function is None or current_function.name.valeur == "_main":
         raise Exception("return en dehors d'une fonction")
 
     ty_expr = gen_expression(return_.value, symbol_table)
@@ -300,21 +302,24 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
     f_args = symbol_table.args(fonction_call.name)
 
     # on empile la valeur de ebp avant de la changer (ancien esp-4) (ou -8).
-    nasm_instruction("push", "ebp", "", "", "")
+    nasm_instruction("push", "ebp", "", "", "sauvegarder l'ancien frame")
 
-    # on déplace ebp pour qu'il pointe sur l'ancien esp
-    nasm_instruction("mov", "ebp", "esp", "", "")
-
-    nasm_instruction("sub", "esp",
-                     str(symbol_table.memory_size_locals(fonction_call.name)),
-                     "", "")
+    nasm_instruction("push", "esp", "", "", "sauvegarder l'ancien esp")
 
     # on empile les arguments de la fonction
-    for i, arg in enumerate(fonction_call.args):
+    if len(fonction_call.args) != len(f_args):
+        raise Exception("nombre d'argument différent de la fonction: ",
+                        len(fonction_call.args), len(f_args))
+    for param, arg in zip(f_args, fonction_call.args):
         ty_arg = gen_expression(arg, symbol_table)
-        if i >= len(f_args) or f_args[i].type() != ty_arg:
-            raise Exception("type d'argument différent de la fonction: ",
-                            ty_arg, f_args[i].to_json())
+        check_type(param.type(), ty_arg)
+
+    nasm_instruction("mov", "ebp", f"[esp+{4*len(fonction_call.args.args)}]",
+                     "", "récupérer l'ancien esp")
+    nasm_instruction("sub", "ebp", "4", "", "")
+    nasm_instruction("sub", "esp",
+                     str(symbol_table.memory_size_locals(fonction_call.name)),
+                     "", "allocation des locales")
 
     # on appelle la fonction
     nasm_instruction("call", f"_{fonction_call.name.valeur}", "", "", "")
@@ -322,6 +327,8 @@ def gen_appel_fonction_user(fonction_call: arbre_abstrait.AppelFonction,
     # on désalloue la mémoire de la fonction (en déplaçant esp)
     nasm_instruction("add", "esp",
                      str(symbol_table.memory_size(fonction_call.name)), "", "")
+
+    nasm_instruction("add", "esp", "4", "", "")
 
     # on dépile la valeur de ebp avant de la changer (ancien esp+4) (ou +8).
     nasm_instruction("pop", "ebp", "", "", "")

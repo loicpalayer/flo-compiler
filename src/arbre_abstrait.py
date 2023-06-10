@@ -269,6 +269,9 @@ class FunctionArgs(AST):
     def append(self, arg: AST):
         self.args.append(arg)
 
+    def __len__(self):
+        return len(self.args)
+
 
 class AppelFonction(AST):
 
