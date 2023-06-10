@@ -97,6 +97,7 @@ def gen_entrypoint(programme: arbre_abstrait.Programme):
     gen_programme(programme, symbol_table, is_main=True)
 
     nasm_instruction("mov", "eax", "1", "", "1 est le code de SYS_EXIT")
+    nasm_instruction("mov", "ebx", "0", "", "0 est le code de retour")
     nasm_instruction("int", "0x80", "", "", "exit")
 
 
